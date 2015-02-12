@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="CacheGitHubCI.Hook">
+<Super>%Persistent</Super>
+<TimeCreated>63595,74765.029055</TimeCreated>
+
+<Property name="Owner">
+<Type>%String</Type>
+</Property>
+
+<Property name="Repository">
+<Type>%String</Type>
+</Property>
+
+<Property name="Namespace">
+<Type>%String</Type>
+<InitialExpression>$Namespace</InitialExpression>
+</Property>
+
+<Index name="Index">
+<IdKey>1</IdKey>
+<Properties>Owner,Repository,Namespace</Properties>
+</Index>
+
+<Property name="Branch">
+<Type>%String</Type>
+</Property>
+
+<Property name="Username">
+<Type>%String</Type>
+</Property>
+
+<Property name="Password">
+<Type>%String</Type>
+</Property>
+
+<Method name="%OnNew">
+<Description><![CDATA[
+This callback method is invoked by the <METHOD>%New</METHOD> method to 
+provide notification that a new instance of an object is being created.
+
+<P>If this method returns an error then the object will not be created.
+<p>It is passed the arguments provided in the %New call.
+When customizing this method, override the arguments with whatever variables and types you expect to receive from %New().
+For example, if you're going to call %New, passing 2 arguments, %OnNew's signature could be:
+<p>Method %OnNew(dob as %Date = "", name as %Name = "") as %Status
+If instead of returning a %Status code this returns an oref and this oref is a subclass of the current
+class then this oref will be the one returned to the caller of %New method.]]></Description>
+<FormalSpec>Owner:%String,Repository:%String,Branch:%String,Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set ..Owner = Owner
+	Set ..Repository = Repository
+	Set ..Namespace = Namespace
+	Set:$d(Branch) ..Branch = Branch
+	Set:$d(Username) ..Username = Username
+	Set:$d(Password) ..Password = Password
+	
+	Set st = ##class(CacheGitHubCI.GitHub).CreateHook(Owner,Repository, Username, Password, Namespace)
+	
+	Quit st
+]]></Implementation>
+</Method>
+
+<Method name="Update">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[	Return ##class(CacheGitHubCI.GitHub).Update(..Owner,..Repository,..Branch,..Username,..Password,..Namespace)
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Library.CacheStorage</Type>
+<DataLocation>^CacheGitHubCI.HookD</DataLocation>
+<DefaultData>HookDefaultData</DefaultData>
+<IdLocation>^CacheGitHubCI.HookD</IdLocation>
+<IndexLocation>^CacheGitHubCI.HookI</IndexLocation>
+<StreamLocation>^CacheGitHubCI.HookS</StreamLocation>
+<Data name="HookDefaultData">
+<Structure>listnode</Structure>
+<Subscript/>
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>Branch</Value>
+</Value>
+<Value name="3">
+<Value>Username</Value>
+</Value>
+<Value name="4">
+<Value>Password</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+</Export>
