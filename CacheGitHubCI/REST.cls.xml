@@ -18,6 +18,109 @@
 <ReturnType>%Status</ReturnType>
 </Method>
 
+<UDLText name="T">
+<Content><![CDATA[
+// 	w $System.Status.GetErrorText(##class(CacheGitHubCI.REST).CreateHook("intersystems-ru","Cache-MDX2JSON","eduard93",^pass))
+
+]]></Content>
+</UDLText>
+
+<UDLText name="T">
+<Content><![CDATA[
+// 	w $System.Status.GetErrorText(##class(CacheGitHubCI.REST).GetHooks("intersystems-ru","Cache-MDX2JSON","eduard93",^pass))
+
+]]></Content>
+</UDLText>
+
+<Method name="CreateHook">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Owner:%String,Repository:%String,Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set namespace = $Namespace
+ 	Set SSLConfig = "GitHub"
+ 	
+ 	Zn "%SYS"
+ 	Do:'##class(Security.SSLConfigs).Exists(SSLConfig) ##class(Security.SSLConfigs).Create(SSLConfig)
+
+ 	Set req=##class(%Net.HttpRequest).%New()
+ 	Set req.Https=1
+	Set req.SSLConfiguration=SSLConfig
+	Set req.Server="api.github.com"
+	Set req.Location = "repos/" _ Owner _ "/" _ Repository _ "/hooks" 									
+	Do req.SetHeader("Accept","application/vnd.github.v3+json") 		
+	
+	If ($d(Username) && $d(Password)) {								
+		Set req.Username = Username											
+	 	Set req.Password = Password
+	} 	
+	
+	Set hook = ##class(%ZEN.proxyObject).%New()
+	Set hook.name = "web"
+	//set hook.active = 1 // can't supply js true/false. True by default
+	Set hook.events = ##class(%ListOfDataTypes).%New()
+	Do hook.events.Insert("push")
+	Set hook.config = ##class(%ZEN.proxyObject).%New()
+	Set hook.config.url = "http://37.139.4.54/cgci/receive/"_ Owner _ "/" _ Repository _"/" _ Namespace
+	Set hook.config."content_type" = "json" 
+	Set hook.config."insecure_ssl" = 1
+	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%WriteJSONStreamFromObject(req.EntityBody,hook)
+	Set st = req.Post()
+	
+	Do req.HttpResponse.OutputToDevice()
+	Return:$$$ISERR(st) st
+	Return:(req.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
+	Return:((req.HttpResponse.StatusCode = 403) && (req.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
+ 	Return:(req.HttpResponse.StatusCode '= 201) $$$ERROR($$$GCMHTTPStatus,req.HttpResponse.StatusCode," expected 200")
+
+	Zn namespace
+	return 1
+]]></Implementation>
+</Method>
+
+<Method name="GetHooks">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Owner:%String,Repository:%String,Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set namespace = $Namespace
+ 	Set SSLConfig = "GitHub"
+ 	
+ 	Zn "%SYS"
+ 	Do:'##class(Security.SSLConfigs).Exists(SSLConfig) ##class(Security.SSLConfigs).Create(SSLConfig)
+
+ 	Set req=##class(%Net.HttpRequest).%New()
+ 	Set req.Https=1
+	Set req.SSLConfiguration=SSLConfig
+	Set req.Server="api.github.com"
+	Set req.Location = "repos/" _ Owner _ "/" _ Repository _ "/hooks" 									
+	Do req.SetHeader("Accept","application/vnd.github.v3+json") 		
+	
+	If ($d(Username) && $d(Password)) {								
+		Set req.Username = Username											
+	 	Set req.Password = Password
+	} 	
+	
+	Set st = req.Get()
+	Return:$$$ISERR(st) st
+	Return:(req.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
+	Return:((req.HttpResponse.StatusCode = 403) && (req.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
+ 	Return:(req.HttpResponse.StatusCode '= 200) $$$ERROR($$$GCMHTTPStatus,req.HttpResponse.StatusCode," expected 200")
+
+ 	#dim objects As List of %ZEN.proxyObject
+ 	#dim obj As %ZEN.proxyObject
+	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(req.HttpResponse.Data,,.objects,1)
+	Return:$$$ISERR(st) st
+	w objects.Count()
+	For i = 1:1:objects.Count() {		
+		Set obj = objects.GetAt(i)
+		do obj.%ToJSON()
+	}
+	zn Namespace
+	return 1
+]]></Implementation>
+</Method>
+
 <Method name="Update">
 <Description><![CDATA[
 Downloads and compiles GitHub repository.<br>
