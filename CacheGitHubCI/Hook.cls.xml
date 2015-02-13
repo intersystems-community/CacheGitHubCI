@@ -34,6 +34,15 @@
 <Type>%String</Type>
 </Property>
 
+<Property name="HookId">
+<Type>%String</Type>
+</Property>
+
+<Property name="Updates">
+<Type>CacheGitHubCI.Update</Type>
+<Collection>list</Collection>
+</Property>
+
 <Method name="%OnNew">
 <Description><![CDATA[
 This callback method is invoked by the <METHOD>%New</METHOD> method to 
@@ -51,22 +60,57 @@ class then this oref will be the one returned to the caller of %New method.]]></
 <ReturnType>%Status</ReturnType>
 <ServerOnly>1</ServerOnly>
 <Implementation><![CDATA[
-	Set ..Owner = Owner
-	Set ..Repository = Repository
-	Set ..Namespace = Namespace
+	Set:$d(Owner) ..Owner = Owner
+	Set:$d(Repository) ..Repository = Repository
+	Set:$d(Namespace) ..Namespace = Namespace
 	Set:$d(Branch) ..Branch = Branch
 	Set:$d(Username) ..Username = Username
 	Set:$d(Password) ..Password = Password
-	
-	Set st = ##class(CacheGitHubCI.GitHub).CreateHook(Owner,Repository, Username, Password, Namespace)
-	
-	Quit st
+
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="CreateHook">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Return:$ISVALIDNUM(..HookId) $$$ERROR($$$GeneralError, "Hook already exists")
+	Set HookId = ""
+	Set st = ##class(CacheGitHubCI.GitHub).CreateHook(..Owner,..Repository, ..Username, ..Password, ..Namespace, .HookId)
+	Return:$$$ISERR(st) st
+	Set:$ISVALIDNUM(HookId) ..HookId = HookId
+	Return $ISVALIDNUM(HookId)
+]]></Implementation>
+</Method>
+
+<Method name="DeleteHook">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Return:(..HookId="") $$$ERROR($$$GeneralError, "Hook does not exist")
+	Set st = ##class(CacheGitHubCI.GitHub).DeleteHook(..Owner,..Repository, ..Username, ..Password, ..HookId)
+	Return:$$$ISERR(st) st
+	Set ..HookId = ""
+	Return $$$OK
 ]]></Implementation>
 </Method>
 
 <Method name="Update">
 <ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[	Return ##class(CacheGitHubCI.GitHub).Update(..Owner,..Repository,..Branch,..Username,..Password,..Namespace)
+<Implementation><![CDATA[
+	#dim %request As %CSP.Request
+	#dim obj As %ZEN.proxyObject
+	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(%request.Content,,.obj,1)
+	
+	Set update = ##class(CacheGitHubCI.Update).%New(..%Id())
+	Set update.Commit = obj."head_commit".id // identical to obj.after
+	Set update.Author = obj."head_commit".author.name
+	Set update.URL = obj."head_commit".url
+	Set update.Status = ##class(CacheGitHubCI.GitHub).Update(..Owner,..Repository,..Branch,..Username,..Password,..Namespace)
+	Do update.%Save()
+	Do ..Updates.Insert(update)
+	Do ..%Save()
+	
+	Return update.Status
 ]]></Implementation>
 </Method>
 
@@ -91,6 +135,21 @@ class then this oref will be the one returned to the caller of %New method.]]></
 </Value>
 <Value name="4">
 <Value>Password</Value>
+</Value>
+<Value name="5">
+<Value>HookId</Value>
+</Value>
+<Value name="6">
+<Value>Owner</Value>
+</Value>
+<Value name="7">
+<Value>Repository</Value>
+</Value>
+<Value name="8">
+<Value>Namespace</Value>
+</Value>
+<Value name="9">
+<Value>Updates</Value>
 </Value>
 </Data>
 </Storage>

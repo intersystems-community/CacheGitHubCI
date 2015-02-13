@@ -18,28 +18,50 @@
 ]]></Content>
 </UDLText>
 
-<Method name="CreateHook">
+<Method name="GetLocalIP">
 <ClassMethod>1</ClassMethod>
-<FormalSpec>Owner:%String,Repository:%String,Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
-<ReturnType>%Status</ReturnType>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	Return:($d(^CacheGitHubCI("IP"))) ^CacheGitHubCI("IP")
+	Return $SYSTEM.INetInfo.HostNameToAddr($SYSTEM.INetInfo.LocalHostName()) // unreliable
+]]></Implementation>
+</Method>
+
+<Method name="CreateRequest">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Username:%String,Password:%String</FormalSpec>
+<ReturnType>%Net.HttpRequest</ReturnType>
 <Implementation><![CDATA[
 	Set namespace = $Namespace
  	Set SSLConfig = "GitHub"
  	
  	Zn "%SYS"
  	Do:'##class(Security.SSLConfigs).Exists(SSLConfig) ##class(Security.SSLConfigs).Create(SSLConfig)
+ 	Zn namespace
 
  	Set req=##class(%Net.HttpRequest).%New()
  	Set req.Https=1
 	Set req.SSLConfiguration=SSLConfig
-	Set req.Server="api.github.com"
-	Set req.Location = "repos/" _ Owner _ "/" _ Repository _ "/hooks" 									
-	Do req.SetHeader("Accept","application/vnd.github.v3+json") 		
+	Set req.Server="api.github.com"							
+	Do req.SetHeader("Accept","application/vnd.github.v3+json") 			// we want 3rd version of api	
 	
-	If ($d(Username) && $d(Password)) {								
-		Set req.Username = Username											
+	If ($d(Username) && $d(Password) && (Username'="") && (Password'="")) {	// supply Username and Passwor, if both are provided. GitHub accept Basic Auth
+		Set req.Username = Username											// https://developer.github.com/v3/auth/
 	 	Set req.Password = Password
 	} 	
+
+	Return req
+]]></Implementation>
+</Method>
+
+<Method name="CreateHook">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Owner:%String,Repository:%String,Username:%String="",Password:%String="",Namespace=$Namespace,*HookId</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	#dim req As %Net.HttpRequest
+	Set req = ..CreateRequest(Username, Password)
+	Set req.Location = "repos/" _ Owner _ "/" _ Repository _ "/hooks" 	
 	
 	Set hook = ##class(%ZEN.proxyObject).%New()
 	Set hook.name = "web"
@@ -47,45 +69,51 @@
 	Set hook.events = ##class(%ListOfDataTypes).%New()
 	Do hook.events.Insert("push")
 	Set hook.config = ##class(%ZEN.proxyObject).%New()
-	Set hook.config.url = "http://37.139.4.54/cgci/receive/"_ Owner _ "/" _ Repository _"/" _ Namespace
+	Set hook.config.url = "http://" _..GetLocalIP() _"/cgci/receive/"_ Owner _ "/" _ Repository _"/" _ Namespace
 	Set hook.config."content_type" = "json" 
 	Set hook.config."insecure_ssl" = 1
 	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%WriteJSONStreamFromObject(req.EntityBody,hook)
 	Set st = req.Post()
-	
-	Do req.HttpResponse.OutputToDevice()
+
 	Return:$$$ISERR(st) st
 	Return:(req.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
 	Return:((req.HttpResponse.StatusCode = 403) && (req.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
  	Return:(req.HttpResponse.StatusCode '= 201) $$$ERROR($$$GCMHTTPStatus,req.HttpResponse.StatusCode," expected 200")
+ 	
+ 	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(req.HttpResponse.Data,,.obj,1)
+ 	Set HookId = obj.id
+ 	
+	Return st
+]]></Implementation>
+</Method>
 
-	Zn namespace
-	return 1
+<Method name="DeleteHook">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Owner:%String,Repository:%String,Username:%String="",Password:%String="",HookId:%Integer</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	#dim req As %Net.HttpRequest
+	Set req = ..CreateRequest(Username, Password)
+	Set req.Location = "repos/" _ Owner _ "/" _ Repository _ "/hooks/" _ HookId 	
+
+	Set st = req.Send("DELETE","")
+
+	Return:$$$ISERR(st) st
+	Return:(req.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
+	Return:((req.HttpResponse.StatusCode = 403) && (req.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
+ 	Return:(req.HttpResponse.StatusCode '= 204) $$$ERROR($$$GCMHTTPStatus,req.HttpResponse.StatusCode," expected 204")
+ 	 	
+	Return $$$OK
 ]]></Implementation>
 </Method>
 
 <Method name="GetHooks">
 <ClassMethod>1</ClassMethod>
-<FormalSpec>Owner:%String,Repository:%String,Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
+<FormalSpec>Owner:%String,Repository:%String,Username:%String="",Password:%String="",Namespace=$Namespace,*Hooks</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
-	Set namespace = $Namespace
- 	Set SSLConfig = "GitHub"
- 	
- 	Zn "%SYS"
- 	Do:'##class(Security.SSLConfigs).Exists(SSLConfig) ##class(Security.SSLConfigs).Create(SSLConfig)
-
- 	Set req=##class(%Net.HttpRequest).%New()
- 	Set req.Https=1
-	Set req.SSLConfiguration=SSLConfig
-	Set req.Server="api.github.com"
+	Set req = ..CreateRequest(Username, Password)
 	Set req.Location = "repos/" _ Owner _ "/" _ Repository _ "/hooks" 									
-	Do req.SetHeader("Accept","application/vnd.github.v3+json") 		
-	
-	If ($d(Username) && $d(Password)) {								
-		Set req.Username = Username											
-	 	Set req.Password = Password
-	} 	
 	
 	Set st = req.Get()
 	Return:$$$ISERR(st) st
@@ -94,16 +122,8 @@
  	Return:(req.HttpResponse.StatusCode '= 200) $$$ERROR($$$GCMHTTPStatus,req.HttpResponse.StatusCode," expected 200")
 
  	#dim objects As List of %ZEN.proxyObject
- 	#dim obj As %ZEN.proxyObject
-	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(req.HttpResponse.Data,,.objects,1)
-	Return:$$$ISERR(st) st
-	w objects.Count()
-	For i = 1:1:objects.Count() {		
-		Set obj = objects.GetAt(i)
-		do obj.%ToJSON()
-	}
-	zn Namespace
-	return 1
+	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(req.HttpResponse.Data,,.Hooks,1)
+	Return st
 ]]></Implementation>
 </Method>
 
@@ -123,32 +143,18 @@ Downloads and compiles GitHub repository.<br>
  For example in the repository: https://github.com/intersystems-ru/Cache-MDX2JSON<br>
  Owner - intersystems-ru, Repository - Cache-MDX2JSON.<br> ]]></Description>
 <ClassMethod>1</ClassMethod>
-<FormalSpec>Owner:%String,Repository:%String,Branch:%String,Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
+<FormalSpec>Owner:%String,Repository:%String,Branch:%String="",Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
-	Set namespace = $Namespace
- 	Set SSLConfig = "GitHub"
- 	
- 	Zn "%SYS"
- 	Do:'##class(Security.SSLConfigs).Exists(SSLConfig) ##class(Security.SSLConfigs).Create(SSLConfig)
-
- 	Set req=##class(%Net.HttpRequest).%New()
- 	Set req.Https=1
-	Set req.SSLConfiguration=SSLConfig
-	Set req.Server="api.github.com"
+	Set req = ..CreateRequest(Username, Password)
 	Set req.Location = "repos/" _ Owner _ "/" _ Repository _ "/contents" 	// as described in https://developer.github.com/v3/repos/	
-	Do:$d(Branch) req.SetParam("ref",Branch) 								// if omitted the repository’s default branch (usually master) would be used
-	Do req.SetHeader("Accept","application/vnd.github.v3+json") 			// we want to receive API v3
+	Do:(Branch'="") req.SetParam("ref",Branch) 								// if omitted the repository’s default branch (usually master) would be used
 	
-	If ($d(Username) && $d(Password)) {										// supply Username and Passwor, if both are provided. GitHub accept Basic Auth
-		Set req.Username = Username											// https://developer.github.com/v3/auth/
-	 	Set req.Password = Password
-	} 	
-
  	Set links = ##class(%ListOfDataTypes).%New()
  	Set st = ..ProcessDirectory("",req,.links)
  	Return:$$$ISERR(st) st
  	 	
+ 	Set namespace = $Namespace
  	Zn Namespace
 	Set st = ..DownloadFiles(links,req,.list)
 	Set st2 = $system.OBJ.CompileList(.list)

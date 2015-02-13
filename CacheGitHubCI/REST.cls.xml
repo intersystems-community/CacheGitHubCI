@@ -28,8 +28,9 @@
 <Implementation><![CDATA[
 	set hook = ##class(CacheGitHubCI.Hook).%OpenId(Owner_"||"_Repository_"||"_Namespace)
 	set st = hook.Update()
-	set ^test($zdt($NOW(-180))) = $System.Status.GetErrorText(st)
-	q 1
+	Do hook.%Save()
+	//set ^test($zdt($NOW(-180))) = $System.Status.GetErrorText(st)
+	q st
 ]]></Implementation>
 </Method>
 </Class>

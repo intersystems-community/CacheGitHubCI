@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="CacheGitHubCI.Update">
+<Super>%Persistent</Super>
+<TimeCreated>63596,55253.399026</TimeCreated>
+
+<Property name="Hook">
+<Type>%String</Type>
+</Property>
+
+<ForeignKey name="HookForeignKey">
+<Properties>Hook</Properties>
+<ReferencedClass>CacheGitHubCI.Hook</ReferencedClass>
+</ForeignKey>
+
+<Property name="DateTimeStart">
+<Type>%String</Type>
+<InitialExpression>$NOW()</InitialExpression>
+</Property>
+
+<Property name="DateTimeEnd">
+<Type>%String</Type>
+</Property>
+
+<Property name="Length">
+<Type>%Double</Type>
+</Property>
+
+<Property name="Commit">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="100"/>
+</Property>
+
+<Property name="Author">
+<Type>%String</Type>
+</Property>
+
+<Property name="URL">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="500"/>
+</Property>
+
+<Property name="Status">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="500"/>
+</Property>
+
+<Method name="%OnAddToSaveSet">
+<Description><![CDATA[
+This callback method is invoked when the current object is added to the SaveSet,
+either because %Save() was invoked on this object or on an object that references this object.
+%OnAddToSaveSet can modify the current object. It can also add other objects to the current
+SaveSet by invoking %AddToSaveSet or remove objects by calling %RemoveFromSaveSet.
+
+<P>If this method returns an error status then %Save() will fail and the transaction
+will be rolled back.]]></Description>
+<FormalSpec>depth:%Integer=3,insert:%Integer=0,callcount:%Integer=0</FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set ..DateTimeEnd = $NOW()
+	Set ..Length = $SYSTEM.SQL.DATEDIFF("s",..DateTimeStart,..DateTimeEnd)
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="%OnNew">
+<FormalSpec>Hook:%String</FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	Set:$d(Hook) ..Hook = Hook
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Library.CacheStorage</Type>
+<DataLocation>^CacheGitHubCI.UpdateD</DataLocation>
+<DefaultData>UpdateDefaultData</DefaultData>
+<IdLocation>^CacheGitHubCI.UpdateD</IdLocation>
+<IndexLocation>^CacheGitHubCI.UpdateI</IndexLocation>
+<StreamLocation>^CacheGitHubCI.UpdateS</StreamLocation>
+<Data name="UpdateDefaultData">
+<Structure>listnode</Structure>
+<Subscript/>
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>DateTimeStart</Value>
+</Value>
+<Value name="3">
+<Value>DateTimeEnd</Value>
+</Value>
+<Value name="4">
+<Value>Length</Value>
+</Value>
+<Value name="5">
+<Value>Commit</Value>
+</Value>
+<Value name="6">
+<Value>Hook</Value>
+</Value>
+<Value name="7">
+<Value>Author</Value>
+</Value>
+<Value name="8">
+<Value>URL</Value>
+</Value>
+<Value name="9">
+<Value>Status</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+</Export>
