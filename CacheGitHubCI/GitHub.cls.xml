@@ -78,7 +78,7 @@
 	Return:$$$ISERR(st) st
 	Return:(req.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
 	Return:((req.HttpResponse.StatusCode = 403) && (req.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
- 	Return:(req.HttpResponse.StatusCode '= 201) $$$ERROR($$$GCMHTTPStatus,req.HttpResponse.StatusCode," expected 200")
+ 	Return:(req.HttpResponse.StatusCode '= 201) $$$ERROR($$$GeneralError,"Received " _ req.HttpResponse.StatusCode _ " expected 200")
  	
  	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(req.HttpResponse.Data,,.obj,1)
  	Set HookId = obj.id
@@ -101,7 +101,7 @@
 	Return:$$$ISERR(st) st
 	Return:(req.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
 	Return:((req.HttpResponse.StatusCode = 403) && (req.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
- 	Return:(req.HttpResponse.StatusCode '= 204) $$$ERROR($$$GCMHTTPStatus,req.HttpResponse.StatusCode," expected 204")
+ 	Return:(req.HttpResponse.StatusCode '= 204) $$$ERROR($$$GeneralError,"Received " _ req.HttpResponse.StatusCode _ " expected 204")
  	 	
 	Return $$$OK
 ]]></Implementation>
@@ -119,10 +119,31 @@
 	Return:$$$ISERR(st) st
 	Return:(req.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
 	Return:((req.HttpResponse.StatusCode = 403) && (req.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
- 	Return:(req.HttpResponse.StatusCode '= 200) $$$ERROR($$$GCMHTTPStatus,req.HttpResponse.StatusCode," expected 200")
+ 	Return:(req.HttpResponse.StatusCode '= 200) $$$ERROR($$$GeneralError,"Received " _ req.HttpResponse.StatusCode _ " expected 200")
 
  	#dim objects As List of %ZEN.proxyObject
 	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(req.HttpResponse.Data,,.Hooks,1)
+	Return st
+]]></Implementation>
+</Method>
+
+<Method name="GetLastCommit">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Owner:%String,Repository:%String,Branch:%String="master",Username:%String="",Password:%String="",*Commit:%ZEN.proxyObject</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	kill Commit
+	Set req = ..CreateRequest(Username, Password)
+	Set:(Branch="") Branch="HEAD" // Branch does not automatically elevates to master
+	Set req.Location = "repos/" _ Owner _ "/" _ Repository _ "/commits/" _ Branch 									
+	
+	Set st = req.Get()
+	Return:$$$ISERR(st) st
+	Return:(req.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
+	Return:((req.HttpResponse.StatusCode = 403) && (req.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
+ 	Return:(req.HttpResponse.StatusCode '= 200) $$$ERROR($$$GeneralError,"Received " _ req.HttpResponse.StatusCode _ " expected 200")
+
+	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(req.HttpResponse.Data,,.Commit,1)
 	Return st
 ]]></Implementation>
 </Method>
@@ -181,7 +202,7 @@ Process one directory of GitHub repository. Recursive.<br>
 	Return:$$$ISERR(st) st
 	Return:(Request.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
 	Return:((Request.HttpResponse.StatusCode = 403) && (Request.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
- 	Return:(Request.HttpResponse.StatusCode '= 200) $$$ERROR($$$GCMHTTPStatus,Request.HttpResponse.StatusCode," expected 200")
+ 	Return:(Request.HttpResponse.StatusCode '= 200) $$$ERROR($$$GeneralError,"Received " _ req.HttpResponse.StatusCode _ " expected 200")
  	
  	#dim objects As List of %ZEN.proxyObject
  	#dim obj As %ZEN.proxyObject

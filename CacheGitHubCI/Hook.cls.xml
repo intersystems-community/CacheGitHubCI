@@ -38,6 +38,10 @@
 <Type>%String</Type>
 </Property>
 
+<Property name="TaskId">
+<Type>%String</Type>
+</Property>
+
 <Property name="Updates">
 <Type>CacheGitHubCI.Update</Type>
 <Collection>list</Collection>
@@ -94,11 +98,77 @@ class then this oref will be the one returned to the caller of %New method.]]></
 ]]></Implementation>
 </Method>
 
-<Method name="Update">
+<Method name="CreateTask">
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
+	Set task=##class(%SYS.Task).%New()
+	Set task.Name = "Sync " _ ..Repository _ " into " _ ..Namespace
+	Set task.NameSpace=$Namespace
+	Set task.TimePeriod=0 // Daily
+	Set task.TimePeriodEvery=1 // Every 1 day
+	Set task.DailyFrequency=1 // Run Several times in a day
+	Set task.DailyFrequencyTime=0 // Run every x minutes
+	Set task.DailyIncrement=5 // # of minutes between runs
+	Set task.DailyStartTime = 0 // Start at 00:00:00
+	Set task.DailyEndTime = 86399 // End at 23:59:59
+	Set task.StartDate = $p($H,",",1) // Start today
+	
+	Set taskdef = ##class(%SYS.Task.RunLegacyTask).%New()
+	Set taskdef.ExecuteCode="Set st=##class(CacheGitHubCI.Hook).Update(""" _ ..Owner _ """,""" _ ..Repository _ """,""" _ ..Namespace_ """) Throw:('st) ##class(%Exception.StatusException).CreateFromStatus(st)"	
+	Do task.AssignSettings(taskdef)
+	Set task.TaskClass=$classname(taskdef)
+	
+	Set st = task.%Save()
+	Return:$$$ISERR(st) st
+	Set ..TaskId = task.%Id()
+	Return ##class(%SYS.Task).RunNow(..TaskId)
+]]></Implementation>
+</Method>
+
+<Method name="DeleteTask">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set st = ##class(%SYS.Task).%DeleteId(..TaskId)
+	Return:$$$ISERR(st) st
+	Set ..TaskId = ""
+	Return $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="Update">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Owner:%String,Repository:%String,Namespace=$Namespace</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Return:'##class(CacheGitHubCI.Hook).%ExistsId(Owner_"||"_Repository_"||"_Namespace) $$$ERROR($$$GeneralError,"Hook does not exist")
+	Set hook = ##class(CacheGitHubCI.Hook).%OpenId(Owner_"||"_Repository_"||"_Namespace)
+		
+	Set commit = ##class(%ZEN.proxyObject).%New()
+	Set st = ##class(CacheGitHubCI.GitHub).GetLastCommit(hook.Owner,hook.Repository,hook.Branch,hook.Username,hook.Password,.commit)
+	Return:$$$ISERR(st) st
+	
+	Set update = ##class(CacheGitHubCI.Update).%New(hook.%Id())
+	Set update.Commit = commit.sha
+	Set update.Author = commit.author.name
+	Set update.URL = commit.url
+	Set st = ##class(CacheGitHubCI.GitHub).Update(hook.Owner,hook.Repository,hook.Branch,hook.Username,hook.Password,hook.Namespace)
+	Set update.Status = st
+	Do hook.Updates.Insert(update)
+	Do hook.%Save()
+	Kill (st)
+	
+	Return st
+]]></Implementation>
+</Method>
+
+<UDLText name="T">
+<Content><![CDATA[
+/*
+Method UpdateHook() As %Status
+{
 	#dim %request As %CSP.Request
 	#dim obj As %ZEN.proxyObject
+	Return:'$isobject(%request) $$$ERROR($$$GeneralError,"Wrong context, must be called from GitHub")
 	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(%request.Content,,.obj,1)
 	
 	Set update = ##class(CacheGitHubCI.Update).%New(..%Id())
@@ -111,8 +181,10 @@ class then this oref will be the one returned to the caller of %New method.]]></
 	Do ..%Save()
 	
 	Return update.Status
-]]></Implementation>
-</Method>
+}*/
+
+]]></Content>
+</UDLText>
 
 <Storage name="Default">
 <Type>%Library.CacheStorage</Type>
@@ -150,6 +222,9 @@ class then this oref will be the one returned to the caller of %New method.]]></
 </Value>
 <Value name="9">
 <Value>Updates</Value>
+</Value>
+<Value name="10">
+<Value>TaskId</Value>
 </Value>
 </Data>
 </Storage>

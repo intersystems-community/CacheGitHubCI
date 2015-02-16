@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="CacheGitHubCI.Action">
+<Super>%SerialObject</Super>
+<TimeCreated>63599,80457.718702</TimeCreated>
+
+<Property name="Type">
+<Type>%String</Type>
+<InitialExpression>"classmethod"</InitialExpression>
+<Parameter name="VALUELIST" value=",classmethod"/>
+</Property>
+
+<Property name="Params">
+<Type>%String</Type>
+</Property>
+
+<Method name="Execute">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Return:..Type="classmethod" ..ExecuteClassMethod()
+	Return $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="ExecuteClassMethod">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set class = $p(..Params,",",1)
+	Set method = $p(..Params,",",2)
+	Return $classmethod(class,method)
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Library.CacheSerialState</Type>
+<State>ActionState</State>
+<StreamLocation>^CacheGitHubCI.ActionS</StreamLocation>
+<Data name="ActionState">
+<Structure>listnode</Structure>
+<Subscript/>
+<Value name="1">
+<Value>Type</Value>
+</Value>
+<Value name="2">
+<Value>Params</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+</Export>

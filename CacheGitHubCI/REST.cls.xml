@@ -17,7 +17,9 @@
 <Method name="Test">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[	q 1
+<Implementation><![CDATA[
+	Write "{""Status"": ""OK""}"
+	Return $$$OK
 ]]></Implementation>
 </Method>
 
@@ -26,11 +28,9 @@
 <FormalSpec>Owner:%String,Repository:%String,Namespace=$Namespace</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
-	set hook = ##class(CacheGitHubCI.Hook).%OpenId(Owner_"||"_Repository_"||"_Namespace)
-	set st = hook.Update()
-	Do hook.%Save()
-	//set ^test($zdt($NOW(-180))) = $System.Status.GetErrorText(st)
-	q st
+	Return:'(%request.GetCgiEnv("HTTP_USER_AGENT") [ "GitHub-Hookshot") $$$ERROR($$$GeneralError,"Wrong origin")
+	set st = ##class(CacheGitHubCI.Hook).Update(Owner_"||"_Repository_"||"_Namespace)
+	Return st
 ]]></Implementation>
 </Method>
 </Class>
