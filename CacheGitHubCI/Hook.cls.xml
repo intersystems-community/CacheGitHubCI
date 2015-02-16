@@ -99,6 +99,7 @@ class then this oref will be the one returned to the caller of %New method.]]></
 </Method>
 
 <Method name="CreateTask">
+<FormalSpec>min:%Integer=60</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Set task=##class(%SYS.Task).%New()
@@ -108,7 +109,7 @@ class then this oref will be the one returned to the caller of %New method.]]></
 	Set task.TimePeriodEvery=1 // Every 1 day
 	Set task.DailyFrequency=1 // Run Several times in a day
 	Set task.DailyFrequencyTime=0 // Run every x minutes
-	Set task.DailyIncrement=5 // # of minutes between runs
+	Set task.DailyIncrement=min // # of minutes between runs
 	Set task.DailyStartTime = 0 // Start at 00:00:00
 	Set task.DailyEndTime = 86399 // End at 23:59:59
 	Set task.StartDate = $p($H,",",1) // Start today
