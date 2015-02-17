@@ -236,8 +236,9 @@ Check repository and update local namespace</Description>
 <FormalSpec>Owner:%String,Repository:%String,Namespace=$Namespace</FormalSpec>
 <ReturnType>CacheGitHubCI.Hook</ReturnType>
 <Implementation><![CDATA[
-	Set Namespace = $ZCVT(Namespace,"l")
 	Set Owner = $ZCVT(Owner,"l")
+	Set Namespace = $ZCVT(Namespace,"l")
+
 	If (##class(CacheGitHubCI.Hook).%ExistsId(Owner_"||"_Repository_"||"_Namespace)) {
 		Set hook = ##class(CacheGitHubCI.Hook).%OpenId(Owner_"||"_Repository_"||"_Namespace)
 	} Else {
