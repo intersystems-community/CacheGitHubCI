@@ -55,23 +55,6 @@ To create more sophisticated setups you need to use CacheGitHubCI.Hook. Usage ex
     Set hook.Owner="intersystems-ru"                // Set repository owner
     Set hook.Repository="Cache-MDX2JSON"            // Set repository name
     Set hook.Branch="master"                        // Set repository branch
-        
-    Set a1 = ##class(CacheGitHubCI.Action).%New()   // Create new action
-    Set a1.Type="code"                              // Set it as COS code
-    Set a1.Params="s ^test($zdt($Now(-180)))=""started compiling""" // Set what COS code to execute 
-    Set hook.PreCompile=a1                          // Set it to execute every time before downloading and compiling repository
-        
-    Set a2 = ##class(CacheGitHubCI.Action).%New()
-    Set a2.Type="classmethod"                       // Set it as classmethod
-    Set a2.Namespace="USER"                         // Set namespace to run classmethod as USER
-    Set a2.Params="MDX2JSON.REST,Test"              // classmethod,classname,arg1,...,argN
-    Set hook.PostCompile=a2                         // Set it to execute every time after downloading and compiling repository
-        
-    Set a3 = ##class(CacheGitHubCI.Action).%New()
-    Set a3.Type="classmethod"
-    Set a3.Namespace="USER"
-    Set a3.Params="MDX2JSON.REST,Test"
-    Set hook.UnitTests=a3                           // Action For UnitTest
     Do hook.%Save()
     
 In this example we created a hook to download [MDX2JSON](https://github.com/intersystems-ru/Cache-MDX2JSON) repository into USER namespace. Now we activate it by creating a task or a webhook to update it. Task updates namespace with repository contents every X minutes (60 by default):
@@ -86,9 +69,33 @@ Webhook updates repository only when someone pushes changes into it. To use webh
     W hook.CreateHook()                           // Creates GitHub webhook
     Do hook.%Save()
         
-Hook execution:
+Hook execution
+-----------
 
-Every time hook gets activated (by webhook or task) it executes the following series of steps: PreCompile → Compile → PostCompile → UnitTests. You can (optionally) supply the code for PreCompile, PostCompile, UnitTests steps and results of their execution gets recorded in CacheGitHubCI.Update object. To see the history of updates you can execute following SQL query in {Namespace}:
+Every time hook gets activated (by webhook or task) it executes the following series of steps: PreCompile → Compile → PostCompile → UnitTests. You can (optionally) supply the code for PreCompile, PostCompile, UnitTests steps and results of their execution gets recorded in CacheGitHubCI.Update object. Here's how to create actions:
+
+    Set a1 = ##class(CacheGitHubCI.Action).%New()   // Create new action
+    Set a1.Type="code"                              // Set it as COS code
+    Set a1.Params="s ^test($zdt($Now(-180)))=""started compiling""" // Set what COS code to execute 
+    Set hook.PreCompile=a1                          // Set it to execute every time before downloading and compiling repository
+        
+    Set a2 = ##class(CacheGitHubCI.Action).%New()
+    Set a2.Type="classmethod"                       // Set it as classmethod
+    Set a2.Namespace="USER"                         // Set namespace to run action as USER ({Namespace} by default)
+    Set a2.Params="MDX2JSON.REST,Test"              // classmethod,classname,arg1,...,argN
+    Set hook.PostCompile=a2                         // Set it to execute every time after downloading and compiling repository
+        
+    Set a3 = ##class(CacheGitHubCI.Action).%New()
+    Set a3.Type="classmethod"
+    Set a3.Namespace="USER"
+    Set a3.Params="MDX2JSON.REST,Test"
+    Set hook.UnitTests=a3                           // Action For UnitTest
+    
+    Do hook.%Save()
+
+Updates History
+-----------
+To see the history of updates you can execute following SQL query in {Namespace}:
 
     SELECT * FROM CacheGitHubCI."Update" WHERE Hook = 'owner||repository||namespace'
         
