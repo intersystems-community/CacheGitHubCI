@@ -28,20 +28,7 @@ Namespace, where to download and compile repository</Description>
 <Implementation><![CDATA[
 	Set Owner = $p(..GitHubURL,"/",4)
 	Set Repository = $p(..GitHubURL,"/",5)
-	Set TaskId = Owner _ "||" _ Repository _ "||" _ ..Namespace
-	
-	If '##class(CacheGitHubCI.Hook).%ExistsId(TaskId) {
-		Set hook=##class(CacheGitHubCI.Hook).%New()     
-		Set hook.Namespace = ..Namespace                       
-		Set hook.Owner = Owner            
-		Set hook.Repository = Repository      
-		Set hook.Branch = "master"                    
-		Set st = hook.%Save()
-		Quit:$$$ERROR(st) st
-		kill (TaskId)		
-	}
-	
-	Quit ##class(CacheGitHubCI.Hook).Update(TaskId)
+	Quit ##class(CacheGitHubCI.Hook).Update(Owner,Repository,..Namespace)
 ]]></Implementation>
 </Method>
 </Class>

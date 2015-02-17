@@ -100,12 +100,22 @@ Set main variables, if provided.</Description>
 <Implementation><![CDATA[
 	Set:$d(Owner) ..Owner = Owner
 	Set:$d(Repository) ..Repository = Repository
-	Set:$d(Namespace) ..Namespace = Namespace
+	Set:$d(Namespace) ..Namespace = $ZCVT(Namespace,"L")
 	Set:$d(Branch) ..Branch = Branch
 	Set:$d(Username) ..Username = Username
 	Set:$d(Password) ..Password = Password
 
 	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="NamespaceSet">
+<FormalSpec>value:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Quit:'##class(%SYS.Namespace).Exists(value) $$$ERROR($$$NamespaceUnavailable,..Namespace)
+    Set i%Namespace=$ZCVT(value,"L")
+    Quit $$$OK
 ]]></Implementation>
 </Method>
 
@@ -154,8 +164,9 @@ Create Cache task to update every <b>min</b> minutes]]></Description>
 	Set task.DailyEndTime = 86399 // End at 23:59:59
 	Set task.StartDate = $p($H,",",1) // Start today
 	
-	Set taskdef = ##class(%SYS.Task.RunLegacyTask).%New()
-	Set taskdef.ExecuteCode="Set st=##class(CacheGitHubCI.Hook).Update(""" _ ..Owner _ """,""" _ ..Repository _ """,""" _ ..Namespace_ """) Throw:('st) ##class(%Exception.StatusException).CreateFromStatus(st)"	
+	Set taskdef = ##class(CacheGitHubCI.Task).%New()
+	Set taskdef.GitHubURL = "https://github.com/" _ ..Owner _ "/" _ ..Repository
+	Set taskdef.Namespace = ..Namespace
 	Do task.AssignSettings(taskdef)
 	Set task.TaskClass=$classname(taskdef)
 	
@@ -185,8 +196,7 @@ Check repository and update local namespace</Description>
 <FormalSpec>Owner:%String,Repository:%String,Namespace=$Namespace</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
-	Return:'##class(CacheGitHubCI.Hook).%ExistsId(Owner_"||"_Repository_"||"_Namespace) $$$ERROR($$$GeneralError,"Hook does not exist")
-	Set hook = ##class(CacheGitHubCI.Hook).%OpenId(Owner_"||"_Repository_"||"_Namespace)
+	Set hook = ..GetObject(Owner,Repository,Namespace)
 		
 	Set commit = ##class(%ZEN.proxyObject).%New()
 	Set st = ##class(CacheGitHubCI.GitHub).GetLastCommit(hook.Owner,hook.Repository,hook.Branch,hook.Username,hook.Password,.commit)
@@ -209,6 +219,26 @@ Check repository and update local namespace</Description>
 	Kill (st)
 	
 	Return st
+]]></Implementation>
+</Method>
+
+<Method name="GetObject">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Owner:%String,Repository:%String,Namespace=$Namespace</FormalSpec>
+<ReturnType>CacheGitHubCI.Hook</ReturnType>
+<Implementation><![CDATA[
+	Set Namespace = $ZCVT(Namespace,"L")
+	If (##class(CacheGitHubCI.Hook).%ExistsId(Owner_"||"_Repository_"||"_Namespace)) {
+		Set hook = ##class(CacheGitHubCI.Hook).%OpenId(Owner_"||"_Repository_"||"_Namespace)
+	} Else {
+		Set hook=##class(CacheGitHubCI.Hook).%New()     
+		Set hook.Namespace = Namespace                       
+		Set hook.Owner = Owner            
+		Set hook.Repository = Repository      
+		Set hook.Branch = "master"                    
+		Do hook.%Save()
+	}
+	Return hook
 ]]></Implementation>
 </Method>
 
