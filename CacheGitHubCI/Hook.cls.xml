@@ -109,21 +109,30 @@ Set main variables, if provided.</Description>
 ]]></Implementation>
 </Method>
 
+<Method name="OwnerSet">
+<FormalSpec>value:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    Set i%Owner=$ZCVT(value,"l")
+    Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="RepositorySet">
+<FormalSpec>value:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    Set i%Repository=$ZCVT(value,"l")
+    Quit $$$OK
+]]></Implementation>
+</Method>
+
 <Method name="NamespaceSet">
 <FormalSpec>value:%String</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Quit:'##class(%SYS.Namespace).Exists(value) $$$ERROR($$$NamespaceUnavailable,..Namespace)
     Set i%Namespace=$ZCVT(value,"l")
-    Quit $$$OK
-]]></Implementation>
-</Method>
-
-<Method name="OwnerSet">
-<FormalSpec>value:%String</FormalSpec>
-<ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[
-    Set i%Owner=$ZCVT(value,"l")
     Quit $$$OK
 ]]></Implementation>
 </Method>
@@ -237,6 +246,7 @@ Check repository and update local namespace</Description>
 <ReturnType>CacheGitHubCI.Hook</ReturnType>
 <Implementation><![CDATA[
 	Set Owner = $ZCVT(Owner,"l")
+	Set Repository = $ZCVT(Repository,"l")
 	Set Namespace = $ZCVT(Namespace,"l")
 
 	If (##class(CacheGitHubCI.Hook).%ExistsId(Owner_"||"_Repository_"||"_Namespace)) {
