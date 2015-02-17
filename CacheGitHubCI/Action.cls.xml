@@ -20,6 +20,8 @@ For code Type: COS code. Recommended structure: Set st=##class(Some.Class).DoSom
 </Property>
 
 <Property name="Namespace">
+<Description>
+Namespace, to execute action.</Description>
 <Type>%String</Type>
 <InitialExpression>$Namespace</InitialExpression>
 </Property>
