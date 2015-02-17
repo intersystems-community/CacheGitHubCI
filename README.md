@@ -72,7 +72,7 @@ Webhook updates repository only when someone pushes changes into it. To use webh
 Hook execution
 -----------
 
-Every time hook gets activated (by webhook or task) it executes the following series of steps: PreCompile → Compile → PostCompile → UnitTests. You can (optionally) supply the code for PreCompile, PostCompile, UnitTests steps and results of their execution gets recorded in CacheGitHubCI.Update object. Here's how to create actions:
+Every time hook gets activated (by webhook or task) it executes the following series of steps: PreCompile → Compile → PostCompile → UnitTests. You can (optionally) supply the code for PreCompile, PostCompile, UnitTests steps and results of their execution get recorded in CacheGitHubCI.Update object. Here's how to create actions:
 
     Set a1 = ##class(CacheGitHubCI.Action).%New()   // Create new action
     Set a1.Type="code"                              // Set it as COS code
