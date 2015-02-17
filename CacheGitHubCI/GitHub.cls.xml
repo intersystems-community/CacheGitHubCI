@@ -164,7 +164,7 @@ Owner - intersystems-ru, Repository - Cache-MDX2JSON.<br> ]]></Description>
  	Set namespace = $Namespace
  	Zn Namespace
 	Set st = ..DownloadFiles(links,req,.list)
-	Set st2 = $system.OBJ.CompileList(.list)
+	Set st2 = $system.OBJ.CompileList(.list,"i")
 	Zn namespace
 	
  	Return $$$ADDSC(st, st2)
