@@ -4,20 +4,6 @@
 <Super>%RegisteredObject</Super>
 <TimeCreated>63595,74968.945813</TimeCreated>
 
-<UDLText name="T">
-<Content><![CDATA[
-// 	w $System.Status.GetErrorText(##class(CacheGitHubCI.REST).CreateHook("intersystems-ru","Cache-MDX2JSON","eduard93",^pass))
-
-]]></Content>
-</UDLText>
-
-<UDLText name="T">
-<Content><![CDATA[
-// 	w $System.Status.GetErrorText(##class(CacheGitHubCI.REST).GetHooks("intersystems-ru","Cache-MDX2JSON","eduard93",^pass))
-
-]]></Content>
-</UDLText>
-
 <Method name="GetLocalIP">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
@@ -151,18 +137,18 @@
 <Method name="Update">
 <Description><![CDATA[
 Downloads and compiles GitHub repository.<br>
- <b>Owner</b> - The name of the repository owner.<br>
- <b>Repository</b> - The name of the repository.<br>
- <b>Branch</b> - The name of the commit/branch/tag. If skipped the repository’s default branch (usually master) would be used.<br>
- <b>Username</b> - GitHub user, who has access to repository. Optional for public repositories.<br>
- <b>Password</b> - GitHub password, corresponding to Username. Optional for public repositories.<br>
- Note, that with Username, you can make up to 5,000 requests per hour. 
- For unauthenticated requests, the rate limit allows to make up to 60 requests per hour. 
- Unauthenticated requests are associated with an IP address.<br>
- <b>Namespace</b> - Namespace, where to download and compile repository.<br>
- 
- For example in the repository: https://github.com/intersystems-ru/Cache-MDX2JSON<br>
- Owner - intersystems-ru, Repository - Cache-MDX2JSON.<br> ]]></Description>
+<b>Owner</b> - The name of the repository owner.<br>
+<b>Repository</b> - The name of the repository.<br>
+<b>Branch</b> - The name of the commit/branch/tag. If skipped the repository’s default branch (usually master) would be used.<br>
+<b>Username</b> - GitHub user, who has access to repository. Optional for public repositories.<br>
+<b>Password</b> - GitHub password, corresponding to Username. Optional for public repositories.<br>
+Note, that with Username, you can make up to 5,000 requests per hour. 
+For unauthenticated requests, the rate limit allows to make up to 60 requests per hour. 
+Unauthenticated requests are associated with an IP address.<br>
+<b>Namespace</b> - Namespace, where to download and compile repository.<br>
+
+For example in the repository: https://github.com/intersystems-ru/Cache-MDX2JSON<br>
+Owner - intersystems-ru, Repository - Cache-MDX2JSON.<br> ]]></Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>Owner:%String,Repository:%String,Branch:%String="",Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
 <ReturnType>%Status</ReturnType>

@@ -5,15 +5,23 @@
 <TimeCreated>63599,80457.718702</TimeCreated>
 
 <Property name="Type">
+<Description>
+Type of performed action.</Description>
 <Type>%String</Type>
 <Parameter name="VALUELIST" value=",classmethod,code"/>
 </Property>
 
 <Property name="Params">
+<Description><![CDATA[
+Parameters for performed action.<br>
+For classmethod Type: classmethod,classname,arg1,...,argN<br>
+For code Type: COS code. Recommended structure: Set st=##class(Some.Class).DoSomeThing(Args) Throw:('st) ##class(%Exception.StatusException).CreateFromStatus(st)"<br>]]></Description>
 <Type>%String</Type>
 </Property>
 
 <Method name="Execute">
+<Description>
+Executes Action specified.</Description>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Return:..Type="" $$$OK
@@ -24,6 +32,7 @@
 </Method>
 
 <Method name="ExecuteClassMethod">
+<Internal>1</Internal>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Set class = $p(..Params,",",1)
@@ -37,6 +46,9 @@
 </Method>
 
 <Method name="ExecuteCode">
+<Description>
+Copied from %SYS.Task.RunLegacyTask</Description>
+<Internal>1</Internal>
 <ProcedureBlock>0</ProcedureBlock>
 <Implementation><![CDATA[
 	Set $ZT="Error"

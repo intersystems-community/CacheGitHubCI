@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="CacheGitHubCI.Hook">
+<Description>
+Hook tying GitHub repository and Cache Namespace.
+Create instance of the class, create webhook or task for updates and save the instance.</Description>
 <Super>%Persistent</Super>
 <TimeCreated>63595,74765.029055</TimeCreated>
 
 <Property name="Owner">
+<Description>
+The name of the repository owner.</Description>
 <Type>%String</Type>
 </Property>
 
 <Property name="Repository">
+<Description>
+The name of the repository.</Description>
 <Type>%String</Type>
 </Property>
 
 <Property name="Namespace">
+<Description>
+Namespace, where to download and compile repository</Description>
 <Type>%String</Type>
 <InitialExpression>$Namespace</InitialExpression>
 </Property>
@@ -23,54 +32,67 @@
 </Index>
 
 <Property name="Branch">
+<Description>
+Repository branch, usually master. Leave empty, if you want to receive default branch.</Description>
 <Type>%String</Type>
 </Property>
 
 <Property name="Username">
+<Description><![CDATA[
+GitHub user, who has access to repository. Optional for public repositories.<br>
+ Note, that with Username/Password, you can make up to 5,000 requests per hour. 
+ For unauthenticated requests, the rate limit allows to make up to 60 requests per hour. 
+ Unauthenticated requests are associated with an IP address.<br>
+ Required, if you want to create webhooks]]></Description>
 <Type>%String</Type>
 </Property>
 
 <Property name="Password">
+<Description>
+GitHub password, corresponding to Username. Optional for public repositories.</Description>
 <Type>%String</Type>
 </Property>
 
 <Property name="HookId">
+<Description>
+Id of GitHub webhook. Set with CreateHook method.</Description>
 <Type>%String</Type>
 </Property>
 
 <Property name="TaskId">
+<Description>
+Id of Cache Task. Set with CreateTask method.</Description>
 <Type>%String</Type>
 </Property>
 
 <Property name="Updates">
+<Description>
+Updates history</Description>
 <Type>CacheGitHubCI.Update</Type>
 <Collection>list</Collection>
 </Property>
 
 <Property name="PreCompile">
+<Description>
+What to do before compiling repository</Description>
 <Type>CacheGitHubCI.Action</Type>
 </Property>
 
 <Property name="PostCompile">
+<Description>
+What to do after compiling repository</Description>
 <Type>CacheGitHubCI.Action</Type>
 </Property>
 
 <Property name="UnitTests">
+<Description>
+What to do for Unit Testing</Description>
 <Type>CacheGitHubCI.Action</Type>
 </Property>
 
 <Method name="%OnNew">
-<Description><![CDATA[
-This callback method is invoked by the <METHOD>%New</METHOD> method to 
-provide notification that a new instance of an object is being created.
-
-<P>If this method returns an error then the object will not be created.
-<p>It is passed the arguments provided in the %New call.
-When customizing this method, override the arguments with whatever variables and types you expect to receive from %New().
-For example, if you're going to call %New, passing 2 arguments, %OnNew's signature could be:
-<p>Method %OnNew(dob as %Date = "", name as %Name = "") as %Status
-If instead of returning a %Status code this returns an oref and this oref is a subclass of the current
-class then this oref will be the one returned to the caller of %New method.]]></Description>
+<Description>
+Set main variables, if provided.</Description>
 <FormalSpec>Owner:%String,Repository:%String,Branch:%String,Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
 <Private>1</Private>
 <ReturnType>%Status</ReturnType>
@@ -88,6 +110,8 @@ class then this oref will be the one returned to the caller of %New method.]]></
 </Method>
 
 <Method name="CreateHook">
+<Description>
+Create GitHub webhook, if we have admin access to repository.</Description>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Return:$ISVALIDNUM(..HookId) $$$ERROR($$$GeneralError, "Hook already exists")
@@ -100,6 +124,8 @@ class then this oref will be the one returned to the caller of %New method.]]></
 </Method>
 
 <Method name="DeleteHook">
+<Description>
+Delete GitHub webhook, if one exists.</Description>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Return:(..HookId="") $$$ERROR($$$GeneralError, "Hook does not exist")
@@ -111,6 +137,8 @@ class then this oref will be the one returned to the caller of %New method.]]></
 </Method>
 
 <Method name="CreateTask">
+<Description><![CDATA[
+Create Cache task to update every <b>min</b> minutes]]></Description>
 <FormalSpec>min:%Integer=60</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
@@ -139,6 +167,8 @@ class then this oref will be the one returned to the caller of %New method.]]></
 </Method>
 
 <Method name="DeleteTask">
+<Description>
+Delete update task</Description>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Set st = ##class(%SYS.Task).%DeleteId(..TaskId)
@@ -149,6 +179,8 @@ class then this oref will be the one returned to the caller of %New method.]]></
 </Method>
 
 <Method name="Update">
+<Description>
+Check repository and update local namespace</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>Owner:%String,Repository:%String,Namespace=$Namespace</FormalSpec>
 <ReturnType>%Status</ReturnType>
