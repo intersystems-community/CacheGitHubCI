@@ -98,9 +98,9 @@ Set main variables, if provided.</Description>
 <ReturnType>%Status</ReturnType>
 <ServerOnly>1</ServerOnly>
 <Implementation><![CDATA[
-	Set:$d(Owner) ..Owner = Owner
+	Set:$d(Owner) ..Owner = $ZCVT(Owner,"l")
 	Set:$d(Repository) ..Repository = Repository
-	Set:$d(Namespace) ..Namespace = $ZCVT(Namespace,"L")
+	Set:$d(Namespace) ..Namespace = $ZCVT(Namespace,"l")
 	Set:$d(Branch) ..Branch = Branch
 	Set:$d(Username) ..Username = Username
 	Set:$d(Password) ..Password = Password
@@ -114,7 +114,16 @@ Set main variables, if provided.</Description>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Quit:'##class(%SYS.Namespace).Exists(value) $$$ERROR($$$NamespaceUnavailable,..Namespace)
-    Set i%Namespace=$ZCVT(value,"L")
+    Set i%Namespace=$ZCVT(value,"l")
+    Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="OwnerSet">
+<FormalSpec>value:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    Set i%Owner=$ZCVT(value,"l")
     Quit $$$OK
 ]]></Implementation>
 </Method>
@@ -227,7 +236,8 @@ Check repository and update local namespace</Description>
 <FormalSpec>Owner:%String,Repository:%String,Namespace=$Namespace</FormalSpec>
 <ReturnType>CacheGitHubCI.Hook</ReturnType>
 <Implementation><![CDATA[
-	Set Namespace = $ZCVT(Namespace,"L")
+	Set Namespace = $ZCVT(Namespace,"l")
+	Set Owner = $ZCVT(Owner,"l")
 	If (##class(CacheGitHubCI.Hook).%ExistsId(Owner_"||"_Repository_"||"_Namespace)) {
 		Set hook = ##class(CacheGitHubCI.Hook).%OpenId(Owner_"||"_Repository_"||"_Namespace)
 	} Else {
