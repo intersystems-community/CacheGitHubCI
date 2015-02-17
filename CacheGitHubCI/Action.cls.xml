@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="CacheGitHubCI.Action">
-<Super>%SerialObject</Super>
+<Super>%Persistent</Super>
 <TimeCreated>63599,80457.718702</TimeCreated>
 
 <Property name="Type">
 <Type>%String</Type>
-<InitialExpression>"classmethod"</InitialExpression>
-<Parameter name="VALUELIST" value=",classmethod"/>
+<Parameter name="VALUELIST" value=",classmethod,code"/>
 </Property>
 
 <Property name="Params">
@@ -17,7 +16,9 @@
 <Method name="Execute">
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
+	Return:..Type="" $$$OK
 	Return:..Type="classmethod" ..ExecuteClassMethod()
+	Return:..Type="code" ..ExecuteCode()
 	Return $$$OK
 ]]></Implementation>
 </Method>
@@ -27,14 +28,60 @@
 <Implementation><![CDATA[
 	Set class = $p(..Params,",",1)
 	Set method = $p(..Params,",",2)
-	Return $classmethod(class,method)
+	Set args = $l(..Params,",") - 2
+	For i=3:1:$l(..Params,",") {
+		Set args(i-2)=$p(..Params,",",i)
+	}
+	Return $classmethod(class,method,args...)
+]]></Implementation>
+</Method>
+
+<Method name="ExecuteCode">
+<ProcedureBlock>0</ProcedureBlock>
+<Implementation><![CDATA[
+	Set $ZT="Error"
+	Set Status=$$$OK
+	X ..Params
+	Quit $g(Status,$$$OK)
+Error	;
+	Set $ZT=""
+	Quit $$$ERROR($$$GeneralError,$ze)
+]]></Implementation>
+</Method>
+
+<Method name="%OnValidateObject">
+<Description><![CDATA[
+This callback method is invoked by the <METHOD>%ValidateObject</METHOD> method to 
+provide notification that the current object is being validated.
+
+<P>If this method returns an error then <METHOD>%ValidateObject</METHOD> will fail.]]></Description>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<ServerOnly>1</ServerOnly>
+<Implementation><![CDATA[
+	If (..Type="classmethod"){
+		Set length = $l(..Params,",")
+		Return:length<2 $$$ERROR($$$GeneralError,"Params property must be a: classmethod,classname,arg1,...,argN")
+	}
+	Return $$$OK
 ]]></Implementation>
 </Method>
 
 <Storage name="Default">
 <Type>%Library.CacheSerialState</Type>
+<DataLocation>^CacheGitHubCI.ActionD</DataLocation>
+<DefaultData>ActionDefaultData</DefaultData>
+<IdLocation>^CacheGitHubCI.ActionD</IdLocation>
+<IndexLocation>^CacheGitHubCI.ActionI</IndexLocation>
 <State>ActionState</State>
 <StreamLocation>^CacheGitHubCI.ActionS</StreamLocation>
+<Data name="ActionDefaultData">
+<Structure>listnode</Structure>
+<Subscript>"1"</Subscript>
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+</Data>
 <Data name="ActionState">
 <Structure>listnode</Structure>
 <Subscript/>

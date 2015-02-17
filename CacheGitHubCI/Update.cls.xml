@@ -40,7 +40,22 @@
 <Parameter name="MAXLEN" value="500"/>
 </Property>
 
-<Property name="Status">
+<Property name="PreCompileStatus">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="500"/>
+</Property>
+
+<Property name="CompileStatus">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="500"/>
+</Property>
+
+<Property name="PostCompileStatus">
+<Type>%String</Type>
+<Parameter name="MAXLEN" value="500"/>
+</Property>
+
+<Property name="UnitTestsStatus">
 <Type>%String</Type>
 <Parameter name="MAXLEN" value="500"/>
 </Property>
@@ -112,6 +127,18 @@ will be rolled back.]]></Description>
 </Value>
 <Value name="9">
 <Value>Status</Value>
+</Value>
+<Value name="10">
+<Value>CompileStatus</Value>
+</Value>
+<Value name="11">
+<Value>PreCompileStatus</Value>
+</Value>
+<Value name="12">
+<Value>PostCompileStatus</Value>
+</Value>
+<Value name="13">
+<Value>UnitTestsStatus</Value>
 </Value>
 </Data>
 </Storage>

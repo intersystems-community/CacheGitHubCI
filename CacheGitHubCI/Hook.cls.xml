@@ -47,6 +47,18 @@
 <Collection>list</Collection>
 </Property>
 
+<Property name="PreCompile">
+<Type>CacheGitHubCI.Action</Type>
+</Property>
+
+<Property name="PostCompile">
+<Type>CacheGitHubCI.Action</Type>
+</Property>
+
+<Property name="UnitTests">
+<Type>CacheGitHubCI.Action</Type>
+</Property>
+
 <Method name="%OnNew">
 <Description><![CDATA[
 This callback method is invoked by the <METHOD>%New</METHOD> method to 
@@ -152,10 +164,16 @@ class then this oref will be the one returned to the caller of %New method.]]></
 	Set update.Commit = commit.sha
 	Set update.Author = commit.author.name
 	Set update.URL = commit.url
-	Set st = ##class(CacheGitHubCI.GitHub).Update(hook.Owner,hook.Repository,hook.Branch,hook.Username,hook.Password,hook.Namespace)
-	Set update.Status = st
+	
+	Set update.PreCompileStatus = hook.PreCompile.Execute()
+	Set update.CompileStatus = ##class(CacheGitHubCI.GitHub).Update(hook.Owner,hook.Repository,hook.Branch,hook.Username,hook.Password,hook.Namespace)
+	Set update.PostCompileStatus = hook.PostCompile.Execute()
+	Set update.UnitTestsStatus = hook.UnitTests.Execute()
+	
 	Do hook.Updates.Insert(update)
 	Do hook.%Save()
+	
+	Set st = $$$ADDSC($$$ADDSC($$$ADDSC(hook.PreCompileStatus,update.Status),hook.PostCompileStatus),update.UnitTestsStatus)
 	Kill (st)
 	
 	Return st
@@ -226,6 +244,24 @@ Method UpdateHook() As %Status
 </Value>
 <Value name="10">
 <Value>TaskId</Value>
+</Value>
+<Value name="11">
+<Value>PreCompile</Value>
+</Value>
+<Value name="12">
+<Value>PostCompile</Value>
+</Value>
+<Value name="13">
+<Value>UnitTests</Value>
+</Value>
+<Value name="14">
+<Value>PreCompileStatus</Value>
+</Value>
+<Value name="15">
+<Value>PostCompileStatus</Value>
+</Value>
+<Value name="16">
+<Value>UnitTestsStatus</Value>
 </Value>
 </Data>
 </Storage>
