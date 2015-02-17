@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="CacheGitHubCI.Action">
-<Super>%Persistent</Super>
+<Super>%SerialObject</Super>
 <TimeCreated>63599,80457.718702</TimeCreated>
 
 <Property name="Type">
@@ -19,15 +19,29 @@ For code Type: COS code. Recommended structure: Set st=##class(Some.Class).DoSom
 <Type>%String</Type>
 </Property>
 
+<Property name="Namespace">
+<Type>%String</Type>
+<InitialExpression>$Namespace</InitialExpression>
+</Property>
+
 <Method name="Execute">
 <Description>
 Executes Action specified.</Description>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Return:..Type="" $$$OK
-	Return:..Type="classmethod" ..ExecuteClassMethod()
-	Return:..Type="code" ..ExecuteCode()
-	Return $$$OK
+	
+	Set Namespace = $Namespace
+	zn ..Namespace
+	
+	If (..Type="classmethod") {
+		Set st = ..ExecuteClassMethod()
+	} ElseIf (..Type="code") {
+		Set st = ..ExecuteCode()
+	}
+	
+	Zn Namespace
+	Return st
 ]]></Implementation>
 </Method>
 
@@ -75,6 +89,8 @@ provide notification that the current object is being validated.
 		Set length = $l(..Params,",")
 		Return:length<2 $$$ERROR($$$GeneralError,"Params property must be a: classmethod,classname,arg1,...,argN")
 	}
+	
+	Return:'##class(%SYS.Namespace).Exists(..Namespace) $$$ERROR($$$NamespaceUnavailable,..Namespace)
 	Return $$$OK
 ]]></Implementation>
 </Method>
@@ -102,6 +118,9 @@ provide notification that the current object is being validated.
 </Value>
 <Value name="2">
 <Value>Params</Value>
+</Value>
+<Value name="3">
+<Value>Namespace</Value>
 </Value>
 </Data>
 </Storage>

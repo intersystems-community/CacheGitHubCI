@@ -14,16 +14,16 @@
 </ForeignKey>
 
 <Property name="DateTimeStart">
-<Type>%String</Type>
-<InitialExpression>$NOW()</InitialExpression>
+<Type>%TimeStamp</Type>
+<InitialExpression>$ZDT($NOW(),3,1,2)</InitialExpression>
 </Property>
 
 <Property name="DateTimeEnd">
-<Type>%String</Type>
+<Type>%TimeStamp</Type>
 </Property>
 
 <Property name="Length">
-<Type>%Double</Type>
+<Type>%String</Type>
 </Property>
 
 <Property name="Commit">
@@ -74,7 +74,7 @@ will be rolled back.]]></Description>
 <ReturnType>%Status</ReturnType>
 <ServerOnly>1</ServerOnly>
 <Implementation><![CDATA[
-	Set ..DateTimeEnd = $NOW()
+	Set ..DateTimeEnd = $ZDT($NOW(),3,1,2)
 	Set ..Length = $NORMALIZE($SYSTEM.SQL.DATEDIFF("s",..DateTimeStart,..DateTimeEnd),2)
 	Quit $$$OK
 ]]></Implementation>
