@@ -23,34 +23,12 @@ Namespace, where to download and compile repository</Description>
 <InitialExpression>$Namespace</InitialExpression>
 </Property>
 
-<Property name="Branch">
-<Description>
-Repository branch, usually master</Description>
-<Type>%String</Type>
-<InitialExpression>"master"</InitialExpression>
-</Property>
-
-<Property name="Username">
-<Description><![CDATA[
-GitHub user, who has access to repository. Optional for public repositories.<br>
-Note, that with Username/Password, you can make up to 5,000 requests per hour. 
-For unauthenticated requests, the rate limit allows to make up to 60 requests per hour. 
-Unauthenticated requests are associated with an IP address.<br>]]></Description>
-<Type>%String</Type>
-</Property>
-
-<Property name="Password">
-<Description><![CDATA[
-GitHub password, corresponding to Username. Optional for public repositories.<br>]]></Description>
-<Type>%String</Type>
-</Property>
-
 <Method name="OnTask">
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Set Owner = $p(..GitHubURL,"/",4)
 	Set Repository = $p(..GitHubURL,"/",5)
-	Quit ##class(CacheGitHubCI.GitHub).Update(Owner,Repository,..Branch,..Username,..Password,..Namespace)
+	Quit ##class(CacheGitHubCI.GitHub).Update(Owner,Repository,"master",,,..Namespace)
 ]]></Implementation>
 </Method>
 </Class>
