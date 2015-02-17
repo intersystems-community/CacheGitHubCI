@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="CacheGitHubCI.Task">
+<Super>%SYS.Task.Definition</Super>
+<TimeCreated>63600,45875.997358</TimeCreated>
+
+<Parameter name="TaskName">
+<Default>GitHubUpdateTask</Default>
+</Parameter>
+
+<Property name="Owner">
+<Type>%String</Type>
+</Property>
+
+<Property name="Repository">
+<Type>%String</Type>
+</Property>
+
+<Property name="Namespace">
+<Type>%String</Type>
+<InitialExpression>$Namespace</InitialExpression>
+</Property>
+
+<Index name="Index">
+<IdKey>1</IdKey>
+<Properties>Owner,Repository,Namespace</Properties>
+</Index>
+
+<Property name="Branch">
+<Type>%String</Type>
+<InitialExpression>"master"</InitialExpression>
+</Property>
+
+<Property name="Username">
+<Type>%String</Type>
+</Property>
+
+<Property name="Password">
+<Type>%String</Type>
+</Property>
+
+<Method name="OnTask">
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[	Quit ##class(CacheGitHubCI.GitHub).Update(..Owner,..Repository,..Branch,..Username,..Password,..Namespace)
+]]></Implementation>
+</Method>
+</Class>
+</Export>
