@@ -8,11 +8,7 @@
 <Default>GitHubUpdateTask</Default>
 </Parameter>
 
-<Property name="Owner">
-<Type>%String</Type>
-</Property>
-
-<Property name="Repository">
+<Property name="GitHubURL">
 <Type>%String</Type>
 </Property>
 
@@ -20,11 +16,6 @@
 <Type>%String</Type>
 <InitialExpression>$Namespace</InitialExpression>
 </Property>
-
-<Index name="Index">
-<IdKey>1</IdKey>
-<Properties>Owner,Repository,Namespace</Properties>
-</Index>
 
 <Property name="Branch">
 <Type>%String</Type>
@@ -41,7 +32,10 @@
 
 <Method name="OnTask">
 <ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[	Quit ##class(CacheGitHubCI.GitHub).Update(..Owner,..Repository,..Branch,..Username,..Password,..Namespace)
+<Implementation><![CDATA[
+	Set Owner = $p(..GitHubURL,"/",4)
+	Set Repository = $p(..GitHubURL,"/",5)
+	Quit ##class(CacheGitHubCI.GitHub).Update(Owner,Repository,..Branch,..Username,..Password,..Namespace)
 ]]></Implementation>
 </Method>
 </Class>
