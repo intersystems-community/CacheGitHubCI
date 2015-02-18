@@ -13,7 +13,7 @@ If you want to use webhooks functionality, additional installation steps are req
 
 1. Check that your server has static public IP address. 
 2. Check that your server is not under NAT/Firewall/etc. by accessing Caché System Management Portal through external ip.
-3. Set  ^CacheGitHubCI("IP") glopal (in namespace, where you imported classes) to the addpess of your server (with port, if required). For example: 
+3. Set  ^CacheGitHubCI("IP") global (in {Namespace}) to the addpess of your server (with port, if required). For example: 
 
         set ^CacheGitHubCI("IP") = "45.45.45.45:57776"
         set ^CacheGitHubCI("IP") = "mycacheserver.com"
@@ -49,9 +49,9 @@ Hook
 To create more sophisticated setups you need to use CacheGitHubCI.Hook. Usage example:
 
     Set hook=##class(CacheGitHubCI.Hook).%New()     // Create hook
-    Set hook.Namespace="USER"                       // Set namespace you want to download GitHub repository to
+    Set hook.Namespace="user"                       // Set namespace you want to download GitHub repository to
     Set hook.Owner="intersystems-ru"                // Set repository owner
-    Set hook.Repository="Cache-MDX2JSON"            // Set repository name
+    Set hook.Repository="cache-mdx2json"            // Set repository name
     Set hook.Branch="master"                        // Set repository branch
     Do hook.%Save()
     
@@ -99,4 +99,4 @@ To see the history of updates you can execute following SQL query in {Namespace}
         
 So, for Cache-MDX2JSON the request would look like:
 
-    SELECT * FROM CacheGitHubCI."Update" WHERE Hook = 'intersystems-ru||Cache-MDX2JSON||USER'
+    SELECT * FROM CacheGitHubCI."Update" WHERE Hook = 'intersystems-ru||cache-mdx2json||user'
