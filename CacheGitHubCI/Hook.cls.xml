@@ -234,7 +234,6 @@ Check repository and update local namespace</Description>
 	Do hook.%Save()
 	
 	Set st = $$$ADDSC($$$ADDSC($$$ADDSC(update.PreCompileStatus,update.CompileStatus),update.PostCompileStatus),update.UnitTestsStatus)
-	Kill (st)
 	
 	Return st
 ]]></Implementation>
