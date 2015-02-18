@@ -29,7 +29,7 @@
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Return:'(%request.GetCgiEnv("HTTP_USER_AGENT") [ "GitHub-Hookshot") $$$ERROR($$$GeneralError,"Wrong origins")
-	Set st = ##class(CacheGitHubCI.Hook).Update(Owner_"||"_Repository_"||"_Namespace)
+	Set st = ##class(CacheGitHubCI.Hook).Update(Owner,Repository,Namespace)
 	Return st
 ]]></Implementation>
 </Method>
