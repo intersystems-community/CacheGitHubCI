@@ -16,6 +16,22 @@ Repository URL, like https://github.com/intersystems-ru/Cache-MDX2JSON</Descript
 <Type>%String</Type>
 </Property>
 
+<Property name="Username">
+<Description><![CDATA[
+GitHub user, who has access to repository. Optional for public repositories.<br>
+Note, that with Username/Password, you can make up to 5,000 requests per hour. 
+For unauthenticated requests, the rate limit allows to make up to 60 requests per hour. 
+Unauthenticated requests are associated with an IP address.<br>
+Required, if you want to create webhooks]]></Description>
+<Type>%String</Type>
+</Property>
+
+<Property name="Password">
+<Description>
+GitHub password, corresponding to Username. Optional for public repositories.</Description>
+<Type>%String</Type>
+</Property>
+
 <Property name="Namespace">
 <Description>
 Namespace, where to download and compile repository</Description>
@@ -26,8 +42,17 @@ Namespace, where to download and compile repository</Description>
 <Method name="OnTask">
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
+	Return:'##class(%SYS.Namespace).Exists(..Namespace) $$$ERROR($$$NamespaceUnavailable,..Namespace)
+	
 	Set Owner = $p(..GitHubURL,"/",4)
 	Set Repository = $p(..GitHubURL,"/",5)
+	
+	If ('##class(CacheGitHubCI.Hook).%ExistsId(Owner_"||"_Repository_"||"_..Namespace)) {
+		Set hook = ##class(CacheGitHubCI.Hook).%New(Owner,Repository,"",..Username,..Password,..Namespace)
+		Do hook.%Save()
+		kill hook
+	} 
+	
 	Quit ##class(CacheGitHubCI.Hook).Update(Owner,Repository,..Namespace)
 ]]></Implementation>
 </Method>

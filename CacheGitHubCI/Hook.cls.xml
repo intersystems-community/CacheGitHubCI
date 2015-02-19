@@ -40,10 +40,10 @@ Repository branch, usually master. Leave empty, if you want to receive default b
 <Property name="Username">
 <Description><![CDATA[
 GitHub user, who has access to repository. Optional for public repositories.<br>
- Note, that with Username/Password, you can make up to 5,000 requests per hour. 
- For unauthenticated requests, the rate limit allows to make up to 60 requests per hour. 
- Unauthenticated requests are associated with an IP address.<br>
- Required, if you want to create webhooks]]></Description>
+Note, that with Username/Password, you can make up to 5,000 requests per hour. 
+For unauthenticated requests, the rate limit allows to make up to 60 requests per hour. 
+Unauthenticated requests are associated with an IP address.<br>
+Required, if you want to create webhooks]]></Description>
 <Type>%String</Type>
 </Property>
 
@@ -214,6 +214,7 @@ Check repository and update local namespace</Description>
 <FormalSpec>Owner:%String,Repository:%String,Namespace=$Namespace</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
+	Return:'##class(%SYS.Namespace).Exists(Namespace) $$$ERROR($$$NamespaceUnavailable,Namespace)
 	Set hook = ..GetObject(Owner,Repository,Namespace)
 		
 	Set commit = ##class(%ZEN.proxyObject).%New()
