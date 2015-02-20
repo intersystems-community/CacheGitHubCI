@@ -31,7 +31,7 @@ There are two ways to create syncing between GitHub repository and Cache instanc
 Simple Task
 -----------
 
-To create task, syncing  GitHub repository -> Cache instance do the following:
+To create task, syncing  GitHub repository → Cache instance do the following:
 
 1. Go to SMP → System Operation → Task Manager → New Task
 2. Set <i>Name</i> as desired
