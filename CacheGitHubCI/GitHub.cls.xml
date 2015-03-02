@@ -221,7 +221,7 @@ Check that incoming file is the one you need.</Description>
 	Set extensions = ",xml,cls,csp,csr,mac,int,bas,inc,gbl,prj,obj,pkg,gof,"
 	Return:($L(File.name,".")=1) 0 //no extension
 	Set File.Extension = $P(File.name,".",$L(File.name,"."))
-	Return $F(extensions,","_File.Extension_",")
+	Return $F(extensions,","_$ZCVT(File.Extension,"l")_",")
 ]]></Implementation>
 </Method>
 
