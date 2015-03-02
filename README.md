@@ -4,21 +4,27 @@ Continuous Integration for InterSystems Caché and GitHub.
 Installation
 -----------
 
-1. Download zip and import classes into Caché (any namespace, further referred to as {Namespace}).
+1. Download Install.cls.xml (from  folder in repository or releases page) into Caché manager directory.
+2. Run in terminal (any namespace): 
+
+        do ##class(%Installer.Installer).InstallFromCommandLine(##class(%File).ManagerDirectory()_"Installer.cls.xml","Namespace={Namespace},IP={IP}")
+
+  where: 
+  
+      {Namespace} is a namespace you want to install to. If it does not exist it would be created automatically. If it does exist only MDX2JSON package would be overwritten. 
+	  {IP} is an optional parameter of address of your server (with port, if required). For example "45.45.45.45:57776", "mycacheserver.com". Required if you wish to use webhook functionality.
+	  
+On this step installer would create (if needed) Namespace and corresponding database, download source code from GitHub and compile it, optionally create web application (named /cgci) if one does not exist (skipping web application creation process if one does exist or no IP is provided).
+3. Give the correct roles to /cgci webapplication for it to be able to compile desired classes.
+
 
 Webhook Installation
 -----------
 
 If you want to use webhooks functionality, additional installation steps are required.
 
-1. Check that your server has static public IP address. 
-2. Check that your server is not under NAT/Firewall/etc. by accessing Caché System Management Portal through external ip.
-3. Set  ^CacheGitHubCI("IP") global (in {Namespace}) to the addpess of your server (with port, if required). For example: 
-
-        set ^CacheGitHubCI("IP") = "45.45.45.45:57776"
-        set ^CacheGitHubCI("IP") = "mycacheserver.com"
-       
-4. Create web application with unauthenticated access, named /cgci, with Dispatch Class = CacheGitHubCI.REST in {Namespace}
+1. Check that your server has static public {IP} address. 
+2. Check that your server is not under NAT/Firewall/etc. by accessing Caché System Management Portal through {IP}.
 
 Usage 
 -----------
