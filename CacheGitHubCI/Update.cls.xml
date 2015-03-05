@@ -91,6 +91,21 @@ will be rolled back.]]></Description>
 ]]></Implementation>
 </Method>
 
+<Method name="GetLastSuccessfulCommit">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Owner:%String,Repository:%String,Namespace=$Namespace</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	Set id = Owner _ "||" _ Repository _ "||" _ Namespace 
+	&sql(SELECT TOP 1 "Commit" into :Commit FROM CacheGitHubCI."Update" 
+			where Hook=:id 
+			AND PreCompileStatus=1 AND CompileStatus=1 
+			AND PostCompileStatus=1 AND UnitTestsStatus=1 
+			ORDER BY DateTimeEnd DESC)
+	Return Commit
+]]></Implementation>
+</Method>
+
 <Storage name="Default">
 <Type>%Library.CacheStorage</Type>
 <DataLocation>^CacheGitHubCI.UpdateD</DataLocation>

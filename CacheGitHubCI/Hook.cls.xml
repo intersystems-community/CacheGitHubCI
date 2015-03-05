@@ -90,6 +90,21 @@ What to do for Unit Testing</Description>
 <Type>CacheGitHubCI.Action</Type>
 </Property>
 
+<Property name="LastUpdateDateTime">
+<Description>
+DateTime of latest update attempt</Description>
+<Type>%TimeStamp</Type>
+</Property>
+
+<Property name="LastUpdateStatus">
+<Description><![CDATA[
+Result of latest update attempt:<br> 
+success - update successful 
+revert  - update error, reverted to last success commit 
+nochanges - no changes on server]]></Description>
+<Type>%String</Type>
+</Property>
+
 <Method name="%OnNew">
 <Description>
 Set main variables, if provided.</Description>
@@ -215,11 +230,19 @@ Check repository and update local namespace</Description>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Return:'##class(%SYS.Namespace).Exists(Namespace) $$$ERROR($$$NamespaceUnavailable,Namespace)
+	#dim hook As CacheGitHubCI.Hook
 	Set hook = ..GetObject(Owner,Repository,Namespace)
 		
 	Set commit = ##class(%ZEN.proxyObject).%New()
 	Set st = ##class(CacheGitHubCI.GitHub).GetLastCommit(hook.Owner,hook.Repository,hook.Branch,hook.Username,hook.Password,.commit)
 	Return:$$$ISERR(st) st
+	
+	If commit.sha = hook.Updates.GetPrevious("").Commit {	
+		Set hook.LastUpdateStatus = "Up to date"
+		Set hook.LastUpdateDateTime = $ZDT($NOW(),3,1,2)
+		Do hook.%Save()
+		Return $$$OK
+	}
 	
 	Set update = ##class(CacheGitHubCI.Update).%New(hook.%Id())
 	Set update.Commit = commit.sha
@@ -235,7 +258,18 @@ Check repository and update local namespace</Description>
 	Do hook.%Save()
 	
 	Set st = $$$ADDSC($$$ADDSC($$$ADDSC(update.PreCompileStatus,update.CompileStatus),update.PostCompileStatus),update.UnitTestsStatus)
+	If $$$ISERR(st) {
+		Set hook.LastUpdateStatus = "Reverted"
+		Set successcommit = ##class(CacheGitHubCI.Update).GetLastSuccessfulCommit(Owner,Repository,Namespace) 
+		do hook.PreCompile.Execute()
+		do ##class(CacheGitHubCI.GitHub).Update(hook.Owner,hook.Repository,successcommit,hook.Username,hook.Password,hook.Namespace)
+		do hook.PostCompile.Execute()
+		do hook.UnitTests.Execute()
+	} Else {
+		Set hook.LastUpdateStatus = "Successful update"
+	}
 	
+	Set hook.LastUpdateDateTime = $ZDT($NOW(),3,1,2)
 	Return st
 ]]></Implementation>
 </Method>
@@ -345,6 +379,12 @@ Method UpdateHook() As %Status
 </Value>
 <Value name="16">
 <Value>UnitTestsStatus</Value>
+</Value>
+<Value name="17">
+<Value>LastUpdateDateTime</Value>
+</Value>
+<Value name="18">
+<Value>LastUpdateStatus</Value>
 </Value>
 </Data>
 </Storage>
