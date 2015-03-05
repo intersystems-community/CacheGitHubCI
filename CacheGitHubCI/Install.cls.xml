@@ -195,7 +195,8 @@ Process one directory of GitHub repository. Recursive.<br>
 
 <Method name="IsCacheFile">
 <Description>
-Check that incoming file is the one you need.</Description>
+Check that incoming file is the one you need.
+See $$autoDetectType^%apiOBJ</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>File:%ZEN.proxyObject</FormalSpec>
 <ReturnType>%Boolean</ReturnType>
