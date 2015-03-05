@@ -150,15 +150,15 @@ Unauthenticated requests are associated with an IP address.<br>
 For example in the repository: https://github.com/intersystems-ru/Cache-MDX2JSON<br>
 Owner - intersystems-ru, Repository - Cache-MDX2JSON.<br> ]]></Description>
 <ClassMethod>1</ClassMethod>
-<FormalSpec>Owner:%String,Repository:%String,Branch:%String="",Username:%String,Password:%String,Namespace=$Namespace</FormalSpec>
+<FormalSpec>Owner:%String,Repository:%String,Branch:%String="",Username:%String="",Password:%String="",Namespace=$Namespace</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
+	#dim req As %Net.HttpRequest 
 	Set req = ..CreateRequest(Username, Password)
 	Set req.Location = "repos/" _ Owner _ "/" _ Repository _ "/contents" 	// as described in https://developer.github.com/v3/repos/	
-	Do:(Branch'="") req.SetParam("ref",Branch) 								// if omitted the repository’s default branch (usually master) would be used
 	
  	Set links = ##class(%ListOfDataTypes).%New()
- 	Set st = ..ProcessDirectory("",req,.links)
+ 	Set st = ..ProcessDirectory("",.req,Branch,.links)
  	Return:$$$ISERR(st) st
  	 	
  	Set namespace = $Namespace
@@ -178,13 +178,15 @@ Process one directory of GitHub repository. Recursive.<br>
 <b>Request</b> - Authenticated/Set %Net.HttpRequest object.<br>
 <b>Links</b> - List of links to raw files (which satisfy <b>IsCacheFile</b> conditions) from repository.<br>]]></Description>
 <ClassMethod>1</ClassMethod>
-<FormalSpec><![CDATA[Path:%String="",Request:%Net.HttpRequest,&Links:%ListOfDataTypes]]></FormalSpec>
+<FormalSpec><![CDATA[Path:%String="",Request:%Net.HttpRequest,Branch:%String="",&Links:%ListOfDataTypes]]></FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Set location = Request.Location
 	Set Request.Location = Request.Location _ Path
+	Do:(Branch'="") Request.SetParam("ref",Branch) 
 	
 	Set st = Request.Get()
+
 	Return:$$$ISERR(st) st
 	Return:(Request.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
 	Return:((Request.HttpResponse.StatusCode = 403) && (Request.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
@@ -198,7 +200,7 @@ Process one directory of GitHub repository. Recursive.<br>
 	For i = 1:1:objects.Count() {		
 		Set obj = objects.GetAt(i)
 		If (obj.type = "dir") {
-			Set st = ..ProcessDirectory("/"_obj.name,Request,.Links)
+			Set st = ..ProcessDirectory("/"_obj.name,Request,Branch,.Links)
 			Return:$$$ISERR(st) st		
 		} ElseIf (obj.type = "file") {
 			Do:..IsCacheFile(obj) Links.Insert(obj."download_url")
