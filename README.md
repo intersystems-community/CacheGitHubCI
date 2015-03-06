@@ -7,7 +7,7 @@ Installation
 1. Download Install.cls.xml (from  folder in repository or releases page) into Caché manager directory.
 2. Run in terminal (any namespace): 
 
-        do ##class(%Installer.Installer).InstallFromCommandLine(##class(%File).ManagerDirectory()_"Installer.cls.xml","Namespace={Namespace},IP={IP}")
+        do ##class(%Installer.Installer).InstallFromCommandLine(##class(%File).ManagerDirectory()_"Install.cls.xml","Namespace={Namespace},IP={IP}")
 
   where: 
   
