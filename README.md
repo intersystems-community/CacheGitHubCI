@@ -106,3 +106,13 @@ To see the history of updates you can execute following SQL query in {Namespace}
 So, for Cache-MDX2JSON the request would look like:
 
     SELECT * FROM CacheGitHubCI."Update" WHERE Hook = 'intersystems-ru||cache-mdx2json||user'
+	
+To see what’s going on with all your hooks:
+
+    SELECT Namespace, Owner, Repository, LastUpdateDateTime, LastUpdateStatus FROM CacheGitHubCI.Hook
+
+LastUpdateStatus  is result of latest update attempt:
+
+    Successful - update successful
+    Reverted - update error, reverted to last successful commit 
+
