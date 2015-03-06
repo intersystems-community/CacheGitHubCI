@@ -99,9 +99,8 @@ DateTime of latest update attempt</Description>
 <Property name="LastUpdateStatus">
 <Description><![CDATA[
 Result of latest update attempt:<br> 
-success - update successful 
-revert  - update error, reverted to last success commit 
-nochanges - no changes on server]]></Description>
+successful - update successful <br>
+reverted  - update error, reverted to last successful commit ]]></Description>
 <Type>%String</Type>
 </Property>
 
@@ -238,7 +237,6 @@ Check repository and update local namespace</Description>
 	Return:$$$ISERR(st) st
 	
 	If commit.sha = hook.Updates.GetPrevious("").Commit {	
-		Set hook.LastUpdateStatus = "Up to date"
 		Set hook.LastUpdateDateTime = $ZDT($NOW(),3,1,2)
 		Do hook.%Save()
 		Return $$$OK
@@ -266,7 +264,7 @@ Check repository and update local namespace</Description>
 		do hook.PostCompile.Execute()
 		do hook.UnitTests.Execute()
 	} Else {
-		Set hook.LastUpdateStatus = "Successful update"
+		Set hook.LastUpdateStatus = "Successful"
 	}
 	
 	Set hook.LastUpdateDateTime = $ZDT($NOW(),3,1,2)
