@@ -236,7 +236,7 @@ Check repository and update local namespace</Description>
 	Set st = ##class(CacheGitHubCI.GitHub).GetLastCommit(hook.Owner,hook.Repository,hook.Branch,hook.Username,hook.Password,.commit)
 	Return:$$$ISERR(st) st
 	
-	If commit.sha = hook.Updates.GetPrevious("").Commit {	
+	If ((hook.Updates.Count()>0) && (commit.sha = hook.Updates.GetPrevious("").Commit)) {	
 		Set hook.LastUpdateDateTime = $ZDT($NOW(),3,1,2)
 		Do hook.%Save()
 		Return $$$OK
