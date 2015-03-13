@@ -75,7 +75,7 @@ will be rolled back.]]></Description>
 <ServerOnly>1</ServerOnly>
 <Implementation><![CDATA[
 	Set ..DateTimeEnd = $ZDT($NOW(),3,1,2)
-	Set ..Length = $NORMALIZE($SYSTEM.SQL.DATEDIFF("s",..DateTimeStart,..DateTimeEnd),2)
+	Set:(..Length = "") ..Length = $NORMALIZE($SYSTEM.SQL.DATEDIFF("s",..DateTimeStart,..DateTimeEnd),2)
 	Quit $$$OK
 ]]></Implementation>
 </Method>
