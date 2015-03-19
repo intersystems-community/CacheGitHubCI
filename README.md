@@ -115,4 +115,9 @@ LastUpdateStatus  is result of latest update attempt:
 
     Successful - update successful
     Reverted - update error, reverted to last successful commit 
+	
+DeepSee
+-----------
+
+There is DeepSee cube CacheGitHubCICube in installed namespace. It updates automatically after every hook update. There is also a pivot and dashboard providing information about available hooks and their status. 
 
