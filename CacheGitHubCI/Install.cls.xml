@@ -31,12 +31,13 @@ todo add optional parameter WEBAPP to Alter web app name if it needs to have ano
 </IfNotDef>
 
 <IfDef Var="IP">
+<Log Text="IP set to ${IP} you can now create hooks." Level="0"/>
+<RunInstall Class="CacheGitHubCI.Install" Method="SetIP"/>
+
 <If Condition='(##class(Security.Applications).Exists("/cgci")=0)'>
 	<Log Text="Creating web application /cgci" Level="0"/>
 	<RunInstall Class="CacheGitHubCI.Install" Method="CreateWebApp"/>
 </If>
-<Log Text="IP set to ${IP} you can now create hooks." Level="0"/>
-<RunInstall Class="CacheGitHubCI.Install" Method="SetIP"/>
 </IfDef>
 
 </Namespace>
