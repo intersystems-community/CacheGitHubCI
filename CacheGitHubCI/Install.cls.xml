@@ -82,6 +82,8 @@ do ##class(CacheGitHubCI.Install).setup(.pVars)</Description>
 </Method>
 
 <Method name="GetNSResource">
+<Description>
+Determine Namespace databease resource.</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>Namespace:%String="%SYS"</FormalSpec>
 <ReturnType>%String</ReturnType>
@@ -91,7 +93,7 @@ do ##class(CacheGitHubCI.Install).setup(.pVars)</Description>
 	do ##Class(Config.Namespaces).Get("%SYS",.Properties)
 	set dbname = Properties("SysRoutines")
 	Set rset = ##class(%ResultSet).%New("Config.Databases:List")
- 	set st= rset.Execute(dbname)
+ 	do rset.Execute(dbname)
 	do rset.Next()
     set dbdir = rset.Data("Directory")
    	set db=##class(SYS.Database).%OpenId(dbdir)
