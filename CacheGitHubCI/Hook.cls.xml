@@ -244,7 +244,7 @@ Check repository and update local namespace</Description>
 	
 	Set update = ##class(CacheGitHubCI.Update).%New(hook.%Id())
 	Set update.Commit = commit.sha
-	Set update.Author = commit.author.name
+	Set update.Author = commit.author.login
 	Set update.URL = commit.url
 	
 	Set update.PreCompileStatus = hook.PreCompile.Execute()

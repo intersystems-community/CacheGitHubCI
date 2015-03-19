@@ -5,7 +5,7 @@
 
 <XData name="Install">
 <Description>
-See generated code in zsetup+1^MDX2JSON.Installer.1
+See generated code in zsetup+1^CacheGitHubCI.Install.1
 todo add optional parameter WEBAPP to Alter web app name if it needs to have another then namespace name</Description>
 <XMLNamespace>INSTALLER</XMLNamespace>
 <Data><![CDATA[

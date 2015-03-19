@@ -106,6 +106,18 @@ will be rolled back.]]></Description>
 ]]></Implementation>
 </Method>
 
+<Method name="DisplayStatus">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Status:%String=""</FormalSpec>
+<ReturnType>%String</ReturnType>
+<SqlName>DisplayStatus</SqlName>
+<SqlProc>1</SqlProc>
+<Implementation><![CDATA[
+	return:$$$ISOK(Status) 1
+	return $System.Status.GetErrorText(Status)
+]]></Implementation>
+</Method>
+
 <Storage name="Default">
 <Type>%Library.CacheStorage</Type>
 <DataLocation>^CacheGitHubCI.UpdateD</DataLocation>

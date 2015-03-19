@@ -56,9 +56,7 @@ Cube definition from Architect.</Description>
   <measure sourceProperty="LastUpdateDateTime" name="LastUpdateAgeDays" disabled="false" aggregate="MAX" type="age" hidden="false" searchable="false"></measure>
   <measure sourceProperty="LastUpdateDateTime" name="LastUpdateDate" disabled="false" aggregate="MAX" type="date" hidden="false" searchable="false"></measure>
   <measure sourceExpression="$s(%source.LastUpdateStatus=&quot;Successful&quot;:1,1:0)" name="LastUpdateSuccess" disabled="false" aggregate="MAX" type="integer" hidden="false" searchable="false"></measure>
-  <listing name="New_listing1" disabled="false" listingType="table" fieldList="LastUpdateStatus" sql="SELECT 
-Author, PreCompileStatus, CompileStatus,  PostCompileStatus,  UnitTestsStatus, DateTimeStart, DateTimeEnd, Length, &quot;Commit&quot;
-FROM CacheGitHubCI.&quot;Update&quot;, $$$SOURCE WHERE $$$RESTRICT AND source.%ID=Hook"></listing>
+  <listing name="UpdatesHistory" disabled="false" listingType="table" fieldList="LastUpdateStatus" sql="SELECT Author, CacheGitHubCI.DisplayStatus(PreCompileStatus) As PreCompileStatus, CacheGitHubCI.DisplayStatus(CompileStatus) As CompileStatus,  CacheGitHubCI.DisplayStatus(PostCompileStatus) AS PostCompileStatus,  CacheGitHubCI.DisplayStatus(UnitTestsStatus) As UnitTestsStatus, DateTimeStart, DateTimeEnd, Length, &quot;Commit&quot; FROM CacheGitHubCI.&quot;Update&quot;, $$$SOURCE WHERE $$$RESTRICT AND source.%ID=Hook ORDER BY CacheGitHubCI.&quot;Update&quot;.ID DESC"></listing>
 </cube>
 ]]></Data>
 </XData>
