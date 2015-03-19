@@ -65,17 +65,40 @@ do ##class(CacheGitHubCI.Install).setup(.pVars)</Description>
 <FormalSpec>pVars,pLogLevel,tInstaller</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
-    Set Namespace=tInstaller.Evaluate("${Namespace}")
-    Do tInstaller.PushNS("%SYS")
+    Set Namespace=pVars("Namespace")
 
    	Set cspProperties("AutheEnabled") = 64 // Unauthenticated
+   	Set cspProperties("MatchRoles") = ":" _ ..GetNSResource("%SYS") 
     Set cspProperties("NameSpace") = Namespace
     Set cspProperties("IsNameSpaceDefault") = 1
     Set cspProperties("DispatchClass")="CacheGitHubCI.REST"
+    
+    Do tInstaller.PushNS("%SYS")
     Set tSC = ##class(Security.Applications).Create("/cgci", .cspProperties)
     Do tInstaller.PopNS()
     If $$$ISERR(tSC) Throw ##class(%Installer.Exception).CreateFromStatus(tSC)
     quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetNSResource">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Namespace:%String="%SYS"</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	set ns = $Namespace
+	zn "%SYS"
+	do ##Class(Config.Namespaces).Get("%SYS",.Properties)
+	set dbname = Properties("SysRoutines")
+	Set rset = ##class(%ResultSet).%New("Config.Databases:List")
+ 	set st= rset.Execute(dbname)
+	do rset.Next()
+    set dbdir = rset.Data("Directory")
+   	set db=##class(SYS.Database).%OpenId(dbdir)
+   	set resname = db.ResourceName
+   	kill (resname,ns)
+   	zn ns
+   	return resname
 ]]></Implementation>
 </Method>
 
