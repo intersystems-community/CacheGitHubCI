@@ -269,6 +269,7 @@ Check repository and update local namespace</Description>
 	
 	Set hook.LastUpdateDateTime = $ZDT($NOW(),3,1,2)
 	Do hook.%Save()
+	JOB ##class(CacheGitHubCI.Cube).BuildCube()
 	Return st
 ]]></Implementation>
 </Method>
@@ -295,31 +296,6 @@ Check repository and update local namespace</Description>
 	Return hook
 ]]></Implementation>
 </Method>
-
-<UDLText name="T">
-<Content><![CDATA[
-/*
-Method UpdateHook() As %Status
-{
-	#dim %request As %CSP.Request
-	#dim obj As %ZEN.proxyObject
-	Return:'$isobject(%request) $$$ERROR($$$GeneralError,"Wrong context, must be called from GitHub")
-	Set st = ##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(%request.Content,,.obj,1)
-	
-	Set update = ##class(CacheGitHubCI.Update).%New(..%Id())
-	Set update.Commit = obj."head_commit".id // identical to obj.after
-	Set update.Author = obj."head_commit".author.name
-	Set update.URL = obj."head_commit".url
-	Set update.Status = ##class(CacheGitHubCI.GitHub).Update(..Owner,..Repository,..Branch,..Username,..Password,..Namespace)
-	Do update.%Save()
-	Do ..Updates.Insert(update)
-	Do ..%Save()
-	
-	Return update.Status
-}*/
-
-]]></Content>
-</UDLText>
 
 <Storage name="Default">
 <Type>%Library.CacheStorage</Type>

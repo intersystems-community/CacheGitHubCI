@@ -60,5 +60,16 @@ Cube definition from Architect.</Description>
 </cube>
 ]]></Data>
 </XData>
+
+<Method name="BuildCube">
+<Description><![CDATA[
+Build cube after <i>Delay</i> seconds.]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Delay:%Integer=10</FormalSpec>
+<Implementation><![CDATA[
+	Hang Delay
+	Do ##class(%DeepSee.Utils).%BuildCube("CacheGitHubCICube",1,0)
+]]></Implementation>
+</Method>
 </Class>
 </Export>
