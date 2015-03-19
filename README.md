@@ -119,5 +119,5 @@ LastUpdateStatus  is result of latest update attempt:
 DeepSee
 -----------
 
-There is DeepSee cube CacheGitHubCICube in installed namespace. It updates automatically after every hook update. There is also a pivot and dashboard providing information about available hooks and their status. 
+There is DeepSee cube CacheGitHubCICube in {Namespace}. It updates automatically after every hook update. There is also a pivot and dashboard providing information about available hooks and their status. 
 
