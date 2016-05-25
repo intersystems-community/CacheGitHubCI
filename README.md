@@ -7,8 +7,8 @@ Installation
 1. Import Install.cls.xml (from  folder in repository or releases page) into Caché via Studio or Terminal or SMP
 2. Run in terminal (any namespace): 
 
-	Set pVars("Namespace") = "CGCI" 
-	Set pVars("IP") = {IP} 
+        Set pVars("Namespace") = "CGCI" 
+        Set pVars("IP") = {IP} 
         Do ##class(CacheGitHubCI.Install).setup(.pVars)
 
   where: 
