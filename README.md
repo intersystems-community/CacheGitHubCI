@@ -13,7 +13,7 @@ Installation
 
   where: 
   
-      Namespace is a namespace you want to install to. If it does not exist it would be created automatically. If it does exist only CacheGitHubCI package would be overwritten. 
+      {Namespace} is a namespace you want to install to. If it does not exist it would be created automatically. If it does exist only CacheGitHubCI package would be overwritten. 
 	  {IP} is an optional parameter of address of your server (with port, if required). For example "45.45.45.45:57776", "mycacheserver.com". Required if you wish to use webhook functionality.
 On this step installer would create (if needed) Namespace and corresponding database, download source code from GitHub and compile it, optionally create web application (named /cgci) if one does not exist (skipping web application creation process if one does exist or no IP is provided).
 
