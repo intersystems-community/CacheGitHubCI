@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25">
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 721U)" ts="2016-08-31 14:25:53">
 <Class name="CacheGitHubCI.GitHub">
 <Super>%RegisteredObject</Super>
+<TimeChanged>64161,48589.094664</TimeChanged>
 <TimeCreated>63595,74968.945813</TimeCreated>
 
 <Method name="GetLocalIP">
@@ -164,6 +165,7 @@ Owner - intersystems-ru, Repository - Cache-MDX2JSON.<br> ]]></Description>
  	Set namespace = $Namespace
  	Zn Namespace
 	Set st = ..DownloadFiles(links,req,.list)
+	zw list
 	Set st2 = $system.OBJ.CompileList(.list,"cuk /checkuptodate=expandedonly")
 	Zn namespace
 	
@@ -220,7 +222,7 @@ Check that incoming file is the one you need.</Description>
 <FormalSpec>File:%ZEN.proxyObject</FormalSpec>
 <ReturnType>%Boolean</ReturnType>
 <Implementation><![CDATA[
-	Set extensions = ",xml,cls,csp,csr,mac,int,bas,inc,gbl,prj,obj,pkg,gof,dfi,pivot,dashboard"
+	Set extensions = ",xml,cls,csp,csr,mac,int,bas,inc,gbl,prj,obj,pkg,gof,dfi,pivot,dashboard,html,css,js,ts,scss"
 	Return:($L(File.name,".")=1) 0 //no extension
 	Set File.Extension = $P(File.name,".",$L(File.name,"."))
 	Return $F(extensions,","_$ZCVT(File.Extension,"l")_",")
@@ -242,7 +244,8 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 	Set st = $$$OK
 	
 	For i = 1:1:Links.Count() {
-		Set streq = Request.Get($e(Links.GetAt(i),35,*)) // Remove "https://raw.githubusercontent.com/" from URL.	
+		Set link = Links.GetAt(i)
+		Set streq = Request.Get($e(link,35,*)) // Remove "https://raw.githubusercontent.com/" from URL.	
 		Set:$$$ISERR(streq) st=$$$ADDSC(st, streq)
 		
 		Set binarystream = Request.HttpResponse.Data
@@ -250,12 +253,20 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 		
 		Set stream=##class(%GlobalCharacterStream).%New() //translating binary stream into character stream
 		While 'binarystream.AtEnd { 
-			Do stream.Write(binarystream.Read()) 
+			Do stream.WriteLine(binarystream.ReadLine()) 
 		}
 		Do stream.Rewind()
 		
-		Set stload = $system.OBJ.LoadStream(stream,"",.error,.items,,,,"UTF8")
+		Set stload = ""
 		
+		set items = ""
+		If ##class(CacheGitHubCI.UDL).IsUDLFile(stream) {
+			Set stload = ##class(CacheGitHubCI.UDL).LoadUDLFile(stream, link, .items)
+		}
+		Else {
+			Set stload = $system.OBJ.LoadStream(stream,"",.error,.items,,,,"UTF8")
+		}
+
  		Set:$$$ISERR(stload) st=$$$ADDSC(st, stload)
  		Merge Items = items  // Does not overwrite existing array keys: Items(itemname)=""
 	}

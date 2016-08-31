@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 721U)" ts="2016-08-31 14:25:42">
+<Class name="CacheGitHubCI.UDL">
+<Super>%RegisteredObject</Super>
+<TimeChanged>64161,51358.048949</TimeChanged>
+<TimeCreated>64160,57921.275282</TimeCreated>
+
+<Method name="IsUDLFile">
+<Description><![CDATA[
+Checks whether this file is in UDL format
+<b>stream</b> - stream which contains file definition]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>stream:%GlobalCharacterStream</FormalSpec>
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[
+	// probably 10 lines is enough
+	set counter = 0 
+	while 'stream.AtEnd {
+		if counter >= 10 {
+			quit
+		}
+		set line = stream.ReadLine()
+		if $find(line, "<Export") {
+			do stream.Rewind()
+			return $$$NO
+		}
+		set counter = counter + 1
+	}
+	do stream.Rewind()
+	
+	return $$$YES
+]]></Implementation>
+</Method>
+
+<Method name="ReadName">
+<Description><![CDATA[
+Finds the first string in a line
+<b>line</b> - any string.<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>line:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	set counter = 1
+	set letter = $extract(line, counter)
+	while letter '= "" {
+		if letter = " " {
+			set counter = counter + 1
+			set letter = $extract(line, counter)
+			continue
+		} else {
+			set ext = $extract(line, counter, *)
+			set index = $find(ext, " ")
+			if index = 0 {
+				set index = 9999999999
+			}
+			return $extract(ext, 0, index - 2)		
+		}
+	}
+	return ""
+]]></Implementation>
+</Method>
+
+<Method name="GetClassName">
+<Description><![CDATA[
+Finds a name of a class
+<b>stream</b> - stream which contains a class definition<br>
+<b>name</b> - name which contains the name of class<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[stream:%GlobalCharacterStream,&name:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	while 'stream.AtEnd {
+		set line = stream.ReadLine()
+		
+		if $extract(line, 1, 3) = "///" { // check for inline comments
+			continue
+		} elseif $zconvert($extract(line, 1, 5), "l") = "class" {
+			set line = $extract(line, 6, *)
+			set name = ..ReadName(line)
+			if name = "" {
+				return '$$$OK
+			} else {
+				return $$$OK
+			}
+		}
+	}
+	return '$$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetRoutineName">
+<Description><![CDATA[
+Finds a name of a routine
+<b>stream</b> - stream which contains a routine definition<br>
+<b>name</b> - name which contains the name of routine<br>
+<b>type</b> - type of file {1 - mac, 2 - inc, 3 - int}]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[stream:%GlobalCharacterStream,&name:%String,&type:%Integer]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	while 'stream.AtEnd {
+		set line = stream.ReadLine()
+		set index = $find(line, "ROUTINE")
+		// TODO - check whether the name on the next line 
+		// or something is between ROUTINE and name
+		if index {
+			if $find(line, "[Type=INC]") {
+				set type = 2
+			}
+			elseif $find(line, "[Type=INT,Generated]") {
+				set type = 3
+			}
+			else {
+				set type = 1
+			}
+			set line = $extract(line, index, *)
+			set name = ..ReadName(line)
+			if name = "" {
+				return '$$$OK
+			} else {
+				return $$$OK
+			}
+		}
+	}
+	return '$$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetDFIName">
+<Description><![CDATA[
+Finds a name of a dfi
+<b>stream</b> - stream which contains a dfi definition<br>
+<b>name</b> - name which contains the name of dfi<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[stream:%GlobalCharacterStream,&name:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	#dim textreader As %XML.TextReader
+	set dfiContent = ""
+	
+	// I don't know why but if i just parse stream it doesn't work
+	while 'stream.AtEnd {
+		set dfiContent = dfiContent _ stream.Read()
+	}
+	
+	set st = ##class(%XML.TextReader).ParseString(dfiContent, .textreader)
+	return:$$$ISERR(st) st
+	
+	while textreader.Read() {
+		set node = textreader.Name
+		if (node = "pivot") || (node = "dashboard") {
+			do textreader.MoveToAttributeName("folderName")
+			set dfiFolderName = $translate(textreader.Value, " ", "-")
+			
+			do textreader.MoveToAttributeName("name")
+			set dfiName = $translate(textreader.Value, " ", "-")
+			
+			set name = dfiFolderName _ "-" _ dfiName _ "." _ node _ ".dfi"
+			return $$$OK
+		}
+	}
+	return '$$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetExt">
+<Description><![CDATA[
+Get extension of the file by url
+<b>url</b> - the url where the file is located in the web.<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>url:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	
+	return $zconvert($piece(url, ".", *), "l")
+]]></Implementation>
+</Method>
+
+<Method name="IsWebFile">
+<Description><![CDATA[
+Check whether a file is a web file
+<b>ext</b> - extensions of the file<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>ext:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	
+	set webExts = "csp,html,css,js,ts,scss"
+	return $find(webExts, ext)
+]]></Implementation>
+</Method>
+
+<Method name="LoadUDLFile">
+<Description><![CDATA[
+Imports the file in UDL file in the project
+<b>contentStream</b> - the stream which contains the source code in udl format.<br>
+<b>url</b> - the url where the file is located in the web.<br>
+<b>list</b> - array of files to compile<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>contentStream:%GlobalCharacterStream,url:%String,list:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set st = $$$OK
+	
+	set ext = ..GetExt(url)
+	if ext = "cls" {
+		set st = ..CreateClass(contentStream, url, .list)
+	}
+	elseif ext = "dfi" {
+		set st = ..CreateDFI(contentStream, url, .list)
+	}
+	elseif (ext = "inc") || (ext = "mac") {
+		set st = ..CreateRoutine(contentStream, url, .list)
+	} elseif ..IsWebFile(ext) {
+		set st = ..CreateWebFile(contentStream, url, ext, .list)
+	}
+	
+	return st
+]]></Implementation>
+</Method>
+
+<Method name="DoesClassExist">
+<Description><![CDATA[
+Checks whether the class exists
+<b>className</b> - name of the class.<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>className:%String</FormalSpec>
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[
+	Set query = "SELECT TOP 1 COUNT(ID) FROM %Dictionary.ClassDefinition WHERE ID = ?"
+	Set statement = ##class(%SQL.Statement).%New()
+	Set st = statement.%Prepare(query)
+	Set rset = statement.%Execute(className)
+	If (rset.%Next()) && (rset.%ROWCOUNT > 0) {
+		Return $$$YES
+	}
+	Return $$$NO
+]]></Implementation>
+</Method>
+
+<Method name="CreateClass">
+<Description><![CDATA[
+Creates and imports the class into the project from stream
+<b>contentStream</b> - the stream which contains the source code in udl format.<br>
+<b>url</b> - the url where the file is located in the web.<br>
+<b>list</b> - array of files to compile<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[contentStream:%CharacterStream,url:%String,&list:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set st = ..GetClassName(contentStream, .className)
+	Return:$$$ISERR(st) st
+	
+	set list(className _ ".cls") = ""
+	
+	Do contentStream.Rewind()
+	
+	If '..DoesClassExist(className) {
+		Set clsDef = ##class(%Dictionary.ClassDefinition).%New()
+		Set clsDef.Name = className
+		Set st = clsDef.%Save()
+		Return:$$$ISERR(st) st
+	}
+
+	
+	Set namespace = $namespace
+	Set st = ##class(%Compiler.UDL.TextServices).SetTextFromStream(namespace, className, contentStream)
+	
+	if st {
+		w !, "Imported " _ className, !
+	}
+	
+	Return st
+]]></Implementation>
+</Method>
+
+<Method name="CreateDFI">
+<Description><![CDATA[
+Creates and imports the dfi file into the project from stream
+<b>contentStream</b> - the stream which contains the source code in udl format.<br>
+<b>list</b> - array of files to compile<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[contentStream:%CharacterStream,url:%String,&list:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set st = $$$OK
+    Try {
+	    Set st = ..GetDFIName(contentStream, .name)
+	    Return:$$$ISERR(st) st
+	    
+	    set list(name) = ""
+	    
+        Set tDoc = ##class(%DeepSee.UI.FolderItemDocument).%New(name)
+        Set st = tDoc.ImportFromXML(contentStream)
+        Return:$$$ISERR(st) st
+        
+        Set st = tDoc.Save()
+        if st {
+		w !, "Imported " _ name, !
+	}
+        Return:$$$ISERR(st) st
+    } Catch e {
+        Set st = e.AsStatus()
+    }
+    Return st
+]]></Implementation>
+</Method>
+
+<Method name="CreateRoutine">
+<Description><![CDATA[
+Creates and imports mac, int, inc files into the project from stream
+<b>contentStream</b> - the stream which contains the source code in udl format.<br>
+<b>url</b> - the url where the file is located in the web.<br>
+<b>list</b> - array of files to compile<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[contentStream:%GlobalCharacterStream,url:%String,&list:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set st = ..GetRoutineName(contentStream, .name, .type)
+	do contentStream.Rewind()
+	
+	return:$$$ISERR(st) st
+	
+	if type = 1 {
+		set name = name _ ".mac"
+	} 
+	elseif type = 2 {
+		set name = name _ ".inc"
+	}
+	elseif type = 3 {
+		set name = name _ ".int"
+	}
+	
+	set list(name) = ""
+		
+	Set rtn = ##class(%Routine).%New(name)
+	While 'contentStream.AtEnd {
+		Set line = contentStream.ReadLine()
+		If $Find(line, "ROUTINE") {
+			Continue
+		}
+		Do rtn.WriteLine(line)
+	}
+	
+	Set st = rtn.Save()
+ 	Return:$$$ISERR(st) st
+ 	
+ 	if st {
+		w !, "Imported " _ name, !
+	}
+ 	Return st
+]]></Implementation>
+</Method>
+
+<Method name="CreateWebFile">
+<Description><![CDATA[
+Creates and imports mac, int, inc files into the project from stream
+<b>contentStream</b> - the stream which contains the source code in udl format.<br>
+<b>url</b> - the url where the file is located in the web.<br>
+<b>ext</b> - extension of the file<br>
+<b>list</b> - array of files to compile<br>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[contentStream:%GlobalCharacterStream,url:%String,ext:%String,&list:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set st = $$$OK
+	
+	Set filestream = ##class(%Stream.FileCharacter).%New()
+	Do contentStream.Rewind()
+	
+	set CSPPath = $system.CSP.GetFileName($system.CSP.GetDefaultApp($namespace)_"/")
+	set fileDirectory = $Piece(url, "csp/", 2)
+	set dirChain = $p(CSPPath_fileDirectory,$p($translate(CSPPath_fileDirectory,"\","/"),"/",*),1)
+	do ##class(%File).CreateDirectoryChain(dirChain)
+	set st = filestream.LinkToFile(CSPPath_fileDirectory)
+	
+	While 'contentStream.AtEnd
+	{
+		Do filestream.WriteLine(contentStream.ReadLine())
+	}
+	if $$$ISERR(st) Quit st
+	
+	set st = filestream.%Save()
+	
+	if st {
+		w !, "Imported " _ fileDirectory, !
+	}
+	
+	Return st
+]]></Implementation>
+</Method>
+</Class>
+</Export>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25">
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 721U)" ts="2016-08-31 14:25:22">
 <Class name="CacheGitHubCI.Install">
+<TimeChanged>64161,51902.447585</TimeChanged>
 <TimeCreated>63613,47857.460994</TimeCreated>
 
 <XData name="Install">
@@ -121,7 +122,7 @@ Determine Namespace databease resource.</Description>
 <Implementation><![CDATA[
     Set Namespace=tInstaller.Evaluate("${Namespace}")
     Do tInstaller.PushNS("%SYS")
-    Set tSC = ..Update(Namespace, "intersystems-ru", "CacheGitHubCI", "master")
+    Set tSC = ..Update(Namespace, "intersystems-ru", "CacheGitHubCI", "udl")
     Do tInstaller.PopNS()
     If $$$ISERR(tSC) Throw ##class(%Installer.Exception).CreateFromStatus(tSC)
     quit $$$OK
