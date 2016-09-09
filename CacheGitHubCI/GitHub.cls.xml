@@ -222,7 +222,7 @@ Check that incoming file is the one you need.</Description>
 <FormalSpec>File:%ZEN.proxyObject</FormalSpec>
 <ReturnType>%Boolean</ReturnType>
 <Implementation><![CDATA[
-	Set extensions = ",xml,cls,csp,csr,mac,int,bas,inc,gbl,prj,obj,pkg,gof,dfi,pivot,dashboard,html,css,js,ts,scss,jpg,png,jpeg,gif"
+	Set extensions = ",xml,cls,csp,csr,mac,int,bas,inc,gbl,prj,obj,pkg,gof,dfi,pivot,dashboard,html,css,js,ts,scss,jpg,png,jpeg,gif,"
 	Return:($L(File.name,".")=1) 0 //no extension
 	Set File.Extension = $P(File.name,".",$L(File.name,"."))
 	Return $F(extensions,","_$ZCVT(File.Extension,"l")_",")
