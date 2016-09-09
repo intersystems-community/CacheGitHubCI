@@ -248,14 +248,18 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 		{
 			Set link = $ListGet(Links.GetAt(i),1)
 			Set bIsCacheFile = $ListGet(Links.GetAt(i),2)
+			Set ^gitfiles(i,"link")=link
+			Set ^gitfiles(i,"bIsCacheFile")=bIsCacheFile
 			
 			Set streq = Request.Get($e(link,35,*)) // Remove "https://raw.githubusercontent.com/" from URL.	
 			If $$$ISERR(streq)
 			{
 				Set st=$$$ADDSC(st, streq)
+				Set ^gitfiles(i,"streq")=streq
 				Continue
 			}
 			
+			Set ^gitfiles(i,"stream")="starting..."
 			Set binarystream = Request.HttpResponse.Data
 			
 			Do binarystream.Rewind() // just in case
@@ -278,6 +282,7 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 				Quit:$System.Status.IsError(st)
 			}	
 			Quit:$System.Status.IsError(st)
+			Set ^gitfiles(i,"stream")="Done"
 			
 			Do stream.Rewind()
 			Do binarystream.Rewind()
@@ -287,14 +292,16 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 			set items = ""
 			If ##class(CacheGitHubCI.UDL).IsUDLFile(stream) 
 			{
+				Set ^gitfiles(i,"IsUDLFile")="1"
 				Do stream.Rewind()
 				Set stload = ##class(CacheGitHubCI.UDL).LoadUDLFile(stream, binarystream, link, .items)
 			}
 			ElseIf bIsCacheFile
 			{
+				Set ^gitfiles(i,"IsUDLFile")="0"
 				Set stload = $system.OBJ.LoadStream(stream,"",.error,.items,,,,"UTF8")
 			}
-
+			Set ^gitfiles(i,"stload")=stload
 	 		If $$$ISERR(stload)
 	 		{
 		 		Set st=$$$ADDSC(st, stload)
@@ -308,6 +315,7 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 	Catch (oException)
 	{
 		Set st = oException.AsStatus()
+		If $D(i) Set ^gitfiles(i,"st final")=st
 	}
 	
 	Quit st
