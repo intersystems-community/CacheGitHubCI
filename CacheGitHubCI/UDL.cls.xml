@@ -184,7 +184,6 @@ Check whether a file is a web file
 <FormalSpec>ext:%String</FormalSpec>
 <ReturnType>%String</ReturnType>
 <Implementation><![CDATA[
-	
 	set webExts = "csp,html,css,js,ts,scss"
 	return $find(webExts, ext)
 ]]></Implementation>
@@ -197,12 +196,13 @@ Imports the file in UDL file in the project
 <b>url</b> - the url where the file is located in the web.<br>
 <b>list</b> - array of files to compile<br>]]></Description>
 <ClassMethod>1</ClassMethod>
-<FormalSpec>contentStream:%GlobalCharacterStream,url:%String,list:%String</FormalSpec>
+<FormalSpec>contentStream:%GlobalCharacterStream,binaryStream:%Stream.FileCharacterGzip,url:%String,list:%String</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	set st = $$$OK
 	
 	set ext = ..GetExt(url)
+	
 	if ext = "cls" {
 		set st = ..CreateClass(contentStream, url, .list)
 	}
@@ -211,8 +211,10 @@ Imports the file in UDL file in the project
 	}
 	elseif (ext = "inc") || (ext = "mac") {
 		set st = ..CreateRoutine(contentStream, url, .list)
-	} elseif ..IsWebFile(ext) {
-		set st = ..CreateWebFile(contentStream, url, ext, .list)
+	} 
+	else
+	{
+		set st = ..CreateWebFile(contentStream, binaryStream, url, ext, .list)
 	}
 	return st
 ]]></Implementation>
@@ -359,34 +361,59 @@ Creates and imports mac, int, inc files into the project from stream
 <b>ext</b> - extension of the file<br>
 <b>list</b> - array of files to compile<br>]]></Description>
 <ClassMethod>1</ClassMethod>
-<FormalSpec><![CDATA[contentStream:%GlobalCharacterStream,url:%String,ext:%String,&list:%String]]></FormalSpec>
+<FormalSpec><![CDATA[contentStream:%GlobalCharacterStream,binaryStream:%Stream.FileCharacterGzip,url:%String,ext:%String,&list:%String]]></FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Set st = $$$OK
-	
-	Set filestream = ##class(%Stream.FileCharacter).%New()
-	Do contentStream.Rewind()
-	
-	set CSPPath = $system.CSP.GetFileName($system.CSP.GetDefaultApp($namespace)_"/")
-	set fileDirectory = $translate($Piece(url, "csp/", 2), "\", "/")
-	set dirChain = $p(CSPPath_fileDirectory,$p($translate(CSPPath_fileDirectory,"\","/"),"/",*),1)
-	set dirChain = $translate(dirChain, "\", "/")
-	do ##class(%File).CreateDirectoryChain(dirChain)
-	set st = filestream.LinkToFile(CSPPath_fileDirectory)
-	
-	While 'contentStream.AtEnd
+	Try
 	{
-		Do filestream.WriteLine(contentStream.ReadLine())
+		Set filestream = ##class(%Stream.FileCharacter).%New()
+		Do contentStream.Rewind()
+		
+		Set tDefaultApp=$system.CSP.GetDefaultApp($namespace)_"/"
+		set tCSPRootPath = $system.CSP.GetFileName(tDefaultApp)
+		
+		Set tFileName = $Piece($Piece(url,"?",1),"/",*)
+		
+		Set tCSPSubPath = $Piece(url,tDefaultApp,2,*)  //still has filename and ? parameters in it
+		Set tCSPSubPath = $Piece(tCSPSubPath, tFileName,1) //now it does't
+		
+		set tFileDirectory = tCSPRootPath_tCSPSubPath
+		Set tFullFileName = tFileDirectory_tFileName
+		
+		//On Windows, tFullFileName will contain \ and / but CreateDirectoryChain() and
+		//LinkToFile() already normalize the paths accordingly to the OS for us so
+		//we don't have to worry about it.	
+		If '##class(%File).CreateDirectoryChain(tFileDirectory)
+		{
+			Set st = $System.Status.Error(5001,"Could nor create path chain '"_tFileDirectory_"'")
+			Quit
+		}
+		
+		set st = filestream.LinkToFile(tFullFileName)
+		Quit:$System.Status.IsError(st)
+		
+		If ..IsWebFile(ext)
+		{
+			Set st=filestream.CopyFrom(contentStream)
+		}
+		Else
+		{
+			Set st=filestream.CopyFrom(binaryStream)
+		}
+		Quit:$System.Status.IsError(st)
+		
+		set st = filestream.%Save()
+		Quit:$System.Status.IsError(st)
+		
+		Write !, "Imported " _ tFullFileName, !
 	}
-	if $$$ISERR(st) Quit st
-	
-	set st = filestream.%Save()
-	
-	if st {
-		w !, "Imported " _ fileDirectory, !
+	Catch (oException)
+	{
+		Set st = oException.AsStatus()
 	}
 	
-	Return st
+	Quit st
 ]]></Implementation>
 </Method>
 </Class>
