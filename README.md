@@ -124,3 +124,7 @@ DeepSee
 
 There is DeepSee cube CacheGitHubCICube in {Namespace}. It updates automatically after every hook update. There is also a pivot and a dashboard providing information about available hooks and their status. 
 
+Discussion
+-----------
+See the [related discussion on InterSystems Developer Community](https://community.intersystems.com/post/git-continuous-integration-what-are-most-important-differences-between-cachegithubci-and)
+
