@@ -311,13 +311,12 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 			If ('$IsObject(characterStream)) || (##class(CacheGitHubCI.UDL).IsUDLFile(characterStream))
 			{
 				Set ^gitfiles(i,"IsUDLFile")="1"
-				Do stream.Rewind()
 				Set stload = ##class(CacheGitHubCI.UDL).LoadUDLFile(characterStream, binarystream, link, .items)
 			}
 			ElseIf bIsCacheFile
 			{
 				Set ^gitfiles(i,"IsUDLFile")="0"
-				Set stload = $system.OBJ.LoadStream(stream,"",.error,.items,,,,"UTF8")
+				Set stload = $system.OBJ.LoadStream(characterStream,"",.error,.items,,,,"UTF8")
 			}
 			Set ^gitfiles(i,"stload")=stload
 	 		If $$$ISERR(stload)
