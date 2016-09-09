@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 721U)" ts="2016-09-04 22:48:03">
+<?xml version="1.0" encoding="UTF8"?>
+<Export generator="Cache" version="25">
 <Class name="CacheGitHubCI.UDL">
 <Super>%RegisteredObject</Super>
-<TimeChanged>64165,82053.980709</TimeChanged>
 <TimeCreated>64160,57921.275282</TimeCreated>
 
 <Method name="IsUDLFile">
@@ -171,8 +170,9 @@ Get extension of the file by url
 <FormalSpec>url:%String</FormalSpec>
 <ReturnType>%String</ReturnType>
 <Implementation><![CDATA[
-	
-	return $zconvert($piece(url, ".", *), "l")
+	//return $zconvert($piece(url, ".", *), "l")
+	//AMIR: There are parameters after the extension that are not part of the extension
+	return $zconvert($piece($piece(url, ".", *),"?"), "l")
 ]]></Implementation>
 </Method>
 
@@ -214,7 +214,6 @@ Imports the file in UDL file in the project
 	} elseif ..IsWebFile(ext) {
 		set st = ..CreateWebFile(contentStream, url, ext, .list)
 	}
-	
 	return st
 ]]></Implementation>
 </Method>
