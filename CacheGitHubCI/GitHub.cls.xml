@@ -222,7 +222,7 @@ Check that incoming file is the one you need.</Description>
 <FormalSpec>File:%ZEN.proxyObject</FormalSpec>
 <ReturnType>%Boolean</ReturnType>
 <Implementation><![CDATA[
-	Set extensions = ",xml,cls,csp,csr,mac,int,bas,inc,gbl,prj,obj,pkg,gof,dfi,pivot,dashboard,html,css,js,ts,scss,jpg,png,jpeg,gif,"
+	Set extensions = ",xml,cls,csp,csr,mac,int,bas,inc,gbl,prj,obj,pkg,gof,dfi,pivot,dashboard,html,css,js,ts,scss,"
 	Return:($L(File.name,".")=1) 0 //no extension
 	Set File.Extension = $P(File.name,".",$L(File.name,"."))
 	Return $F(extensions,","_$ZCVT(File.Extension,"l")_",")
@@ -264,37 +264,55 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 			
 			Do binarystream.Rewind() // just in case
 			
-			Set stream=##class(%GlobalCharacterStream).%New() //translating binary stream into character stream
-			While 'binarystream.AtEnd
+			Set characterStream=##class(%GlobalCharacterStream).%New() //translating binary stream into character stream
+			Set stTranslate=$$$OK
+			Try
 			{
-				//Use eol to prevent breaking lines larger than 32Kb
-				Set line=binarystream.ReadLine(, .st, .eol)
-				Quit:$System.Status.IsError(st)
-							
-				If eol
+				While 'binarystream.AtEnd
 				{
-					Set st=stream.WriteLine(line)
-				}
-				Else
-				{
-					Set st=stream.Write(line)
-				}
-				Quit:$System.Status.IsError(st)
-			}	
-			Quit:$System.Status.IsError(st)
+					//Use eol to prevent breaking lines larger than 32Kb
+					Set line=binarystream.ReadLine(, .stTranslate, .eol)
+					Quit:$System.Status.IsError(stTranslate)
+								
+					If eol
+					{
+						Set stTranslate=characterStream.WriteLine(line)
+					}
+					Else
+					{
+						Set stTranslate=characterStream.Write(line)
+					}
+					Quit:$System.Status.IsError(stTranslate)
+				}	
+				Quit:$System.Status.IsError(stTranslate)
+				
+				Do characterStream.Rewind()
+			}
+			Catch (oTranslateStreamException)
+			{
+				Set stTranslate=oTranslateStreamException.AsStatus()
+			}
+			
+			If $System.Status.IsError(stTranslate)
+			{
+				//Could not convert binary stream to character stream
+				//It is probably a binary file anyway
+				Set characterStream=""
+				Set st=$$$ADDSC(st, stTranslate)
+				Set ^gitfiles(i,"stTranslate")=stTranslate
+			}
 			Set ^gitfiles(i,"stream")="Done"
 			
-			Do stream.Rewind()
 			Do binarystream.Rewind()
 			
-			Set stload = ""
+			Set stload = $$$OK
 			
 			set items = ""
-			If ##class(CacheGitHubCI.UDL).IsUDLFile(stream) 
+			If ('$IsObject(characterStream)) || (##class(CacheGitHubCI.UDL).IsUDLFile(characterStream))
 			{
 				Set ^gitfiles(i,"IsUDLFile")="1"
 				Do stream.Rewind()
-				Set stload = ##class(CacheGitHubCI.UDL).LoadUDLFile(stream, binarystream, link, .items)
+				Set stload = ##class(CacheGitHubCI.UDL).LoadUDLFile(characterStream, binarystream, link, .items)
 			}
 			ElseIf bIsCacheFile
 			{

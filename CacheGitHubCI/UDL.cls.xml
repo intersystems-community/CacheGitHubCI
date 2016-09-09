@@ -367,9 +367,6 @@ Creates and imports mac, int, inc files into the project from stream
 	Set st = $$$OK
 	Try
 	{
-		Set filestream = ##class(%Stream.FileCharacter).%New()
-		Do contentStream.Rewind()
-		
 		Set tDefaultApp=$system.CSP.GetDefaultApp($namespace)_"/"
 		set tCSPRootPath = $system.CSP.GetFileName(tDefaultApp)
 		
@@ -390,10 +387,11 @@ Creates and imports mac, int, inc files into the project from stream
 			Quit
 		}
 		
+		Set filestream = ##class(%Stream.FileCharacter).%New()
 		set st = filestream.LinkToFile(tFullFileName)
 		Quit:$System.Status.IsError(st)
 		
-		If ..IsWebFile(ext)
+		If $IsObject(contentStream) && ..IsWebFile(ext)
 		{
 			Set st=filestream.CopyFrom(contentStream)
 		}
