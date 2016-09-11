@@ -121,7 +121,7 @@ Determine Namespace databease resource.</Description>
 <Implementation><![CDATA[
     Set Namespace=tInstaller.Evaluate("${Namespace}")
     Do tInstaller.PushNS("%SYS")
-    Set tSC = ..Update(Namespace, "amirsamary", "CacheGitHubCI", "udl")
+    Set tSC = ..Update(Namespace, "intersystems-ru", "CacheGitHubCI", "udl")
     Do tInstaller.PopNS()
     If $$$ISERR(tSC) Throw ##class(%Installer.Exception).CreateFromStatus(tSC)
     quit $$$OK
