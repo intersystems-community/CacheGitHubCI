@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 721U)" ts="2016-08-31 14:25:22">
+<?xml version="1.0" encoding="UTF8"?>
+<Export generator="Cache" version="25">
 <Class name="CacheGitHubCI.Install">
-<TimeChanged>64161,51902.447585</TimeChanged>
 <TimeCreated>63613,47857.460994</TimeCreated>
 
 <XData name="Install">
@@ -15,7 +14,7 @@ todo add optional parameter WEBAPP to Alter web app name if it needs to have ano
 <Log Text="Creating namespace ${Namespace}" Level="0"/>
 <Namespace Name="${Namespace}" Create="yes" Code="${Namespace}" Data="${Namespace}">
 <Configuration>
-<Database Name="${Namespace}" Dir="${MGRDIR}/${Namespace}" Create="yes" MountRequired="true" Resource="%DB_${Namespace}" PublicPermissions="RW" MountAtStartup="true"/>
+<Database Name="${Namespace}" Dir="${MGRDIR}/${Namespace}" Create="yes" MountRequired="false" Resource="%DB_${Namespace}" PublicPermissions="RW" MountAtStartup="true"/>
 </Configuration>
 </Namespace>
  <Log Text="End Creating namespace ${Namespace}" Level="0"/>
@@ -55,7 +54,7 @@ do ##class(CacheGitHubCI.Install).setup(.pVars)</Description>
 <Internal>1</Internal>
 <ClassMethod>1</ClassMethod>
 <CodeMode>objectgenerator</CodeMode>
-<FormalSpec><![CDATA[&pVars,pLogLevel:%Integer=0,pInstaller:%Installer.Installer]]></FormalSpec>
+<FormalSpec><![CDATA[&pVars,pLogLevel:%Integer=3,pInstaller:%Installer.Installer,pLogger:%Installer.AbstractLogger]]></FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[ 	Quit ##class(%Installer.Manifest).%Generate(%compiledclass, %code, "Install")
 ]]></Implementation>
@@ -122,7 +121,7 @@ Determine Namespace databease resource.</Description>
 <Implementation><![CDATA[
     Set Namespace=tInstaller.Evaluate("${Namespace}")
     Do tInstaller.PushNS("%SYS")
-    Set tSC = ..Update(Namespace, "intersystems-ru", "CacheGitHubCI", "udl")
+    Set tSC = ..Update(Namespace, "amirsamary", "CacheGitHubCI", "udl")
     Do tInstaller.PopNS()
     If $$$ISERR(tSC) Throw ##class(%Installer.Exception).CreateFromStatus(tSC)
     quit $$$OK
@@ -168,7 +167,7 @@ Downloads and compiles GitHub repository.<br>
 	} 	
 
  	Set links = ##class(%ListOfDataTypes).%New()
- 	Set st = ..ProcessDirectory("",req,.links)
+ 	Set st = ..ProcessDirectory("",.req,Branch,.links)
  	Return:$$$ISERR(st) st
  	 	
  	Zn Namespace
@@ -187,17 +186,19 @@ Process one directory of GitHub repository. Recursive.<br>
 <b>Request</b> - Authenticated/Set %Net.HttpRequest object.<br>
 <b>Links</b> - List of links to raw files (which satisfy <b>IsCacheFile</b> conditions) from repository.<br>]]></Description>
 <ClassMethod>1</ClassMethod>
-<FormalSpec><![CDATA[Path:%String="",Request:%Net.HttpRequest,&Links:%ListOfDataTypes]]></FormalSpec>
+<FormalSpec><![CDATA[Path:%String="",Request:%Net.HttpRequest,Branch:%String="",&Links:%ListOfDataTypes]]></FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	Set location = Request.Location
 	Set Request.Location = Request.Location _ Path
+	Do:(Branch'="") Request.SetParam("ref",Branch) 
 	
 	Set st = Request.Get()
+
 	Return:$$$ISERR(st) st
 	Return:(Request.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
 	Return:((Request.HttpResponse.StatusCode = 403) && (Request.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
- 	Return:(Request.HttpResponse.StatusCode '= 200) $$$ERROR($$$GeneralError,"Received " _ Request.HttpResponse.StatusCode _ " status, expected 200")
+ 	Return:(Request.HttpResponse.StatusCode '= 200) $$$ERROR($$$GeneralError,"Received " _ Request.HttpResponse.StatusCode _ " expected 200")
  	
  	#dim objects As List of %ZEN.proxyObject
  	#dim obj As %ZEN.proxyObject
@@ -207,7 +208,7 @@ Process one directory of GitHub repository. Recursive.<br>
 	For i = 1:1:objects.Count() {		
 		Set obj = objects.GetAt(i)
 		If (obj.type = "dir") {
-			Set st = ..ProcessDirectory("/"_obj.name,Request,.Links)
+			Set st = ..ProcessDirectory("/"_obj.name,Request,Branch,.Links)
 			Return:$$$ISERR(st) st		
 		} ElseIf (obj.type = "file") {
 			Do:..IsCacheFile(obj) Links.Insert(obj."download_url")

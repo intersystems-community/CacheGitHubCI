@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 721U)" ts="2016-08-31 14:25:53">
+<?xml version="1.0" encoding="UTF8"?>
+<Export generator="Cache" version="25">
 <Class name="CacheGitHubCI.GitHub">
 <Super>%RegisteredObject</Super>
-<TimeChanged>64161,48589.094664</TimeChanged>
 <TimeCreated>63595,74968.945813</TimeCreated>
 
 <Method name="GetLocalIP">
@@ -205,7 +204,8 @@ Process one directory of GitHub repository. Recursive.<br>
 			Set st = ..ProcessDirectory("/"_obj.name,Request,Branch,.Links)
 			Return:$$$ISERR(st) st		
 		} ElseIf (obj.type = "file") {
-			Do:..IsCacheFile(obj) Links.Insert(obj."download_url")
+			//Do:..IsCacheFile(obj) Links.Insert(obj."download_url")
+			Do Links.Insert($LB(obj."download_url",..IsCacheFile(obj)))
 		} Else {
 			// obj.type = "symlink" or obj.type = "submodule"
 		} 
@@ -222,7 +222,7 @@ Check that incoming file is the one you need.</Description>
 <FormalSpec>File:%ZEN.proxyObject</FormalSpec>
 <ReturnType>%Boolean</ReturnType>
 <Implementation><![CDATA[
-	Set extensions = ",xml,cls,csp,csr,mac,int,bas,inc,gbl,prj,obj,pkg,gof,dfi,pivot,dashboard,html,css,js,ts,scss"
+	Set extensions = ",xml,cls,csp,csr,mac,int,bas,inc,gbl,prj,obj,pkg,gof,dfi,pivot,dashboard,html,css,js,ts,scss,"
 	Return:($L(File.name,".")=1) 0 //no extension
 	Set File.Extension = $P(File.name,".",$L(File.name,"."))
 	Return $F(extensions,","_$ZCVT(File.Extension,"l")_",")
@@ -242,37 +242,100 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 	Kill Items
 	Set Request.Server = "raw.githubusercontent.com"
 	Set st = $$$OK
-	
-	For i = 1:1:Links.Count() {
-		Set link = Links.GetAt(i)
-		Set streq = Request.Get($e(link,35,*)) // Remove "https://raw.githubusercontent.com/" from URL.	
-		Set:$$$ISERR(streq) st=$$$ADDSC(st, streq)
-		
-		Set binarystream = Request.HttpResponse.Data
-		Do binarystream.Rewind() // just in case
-		
-		Set stream=##class(%GlobalCharacterStream).%New() //translating binary stream into character stream
-		While 'binarystream.AtEnd { 
-			Do stream.WriteLine(binarystream.ReadLine()) 
+	Try
+	{
+		For i = 1:1:Links.Count() 
+		{
+			Set link = $ListGet(Links.GetAt(i),1)
+			Set bIsCacheFile = $ListGet(Links.GetAt(i),2)
+			Set ^gitfiles(i,"link")=link
+			Set ^gitfiles(i,"bIsCacheFile")=bIsCacheFile
+			
+			Set streq = Request.Get($e(link,35,*)) // Remove "https://raw.githubusercontent.com/" from URL.	
+			If $$$ISERR(streq)
+			{
+				Set st=$$$ADDSC(st, streq)
+				Set ^gitfiles(i,"streq")=streq
+				Continue
+			}
+			
+			Set ^gitfiles(i,"stream")="starting..."
+			Set binarystream = Request.HttpResponse.Data
+			
+			Do binarystream.Rewind() // just in case
+			
+			Set characterStream=##class(%GlobalCharacterStream).%New() //translating binary stream into character stream
+			Set stTranslate=$$$OK
+			Try
+			{
+				While 'binarystream.AtEnd
+				{
+					//Use eol to prevent breaking lines larger than 32Kb
+					Set line=binarystream.ReadLine(, .stTranslate, .eol)
+					Quit:$System.Status.IsError(stTranslate)
+								
+					If eol
+					{
+						Set stTranslate=characterStream.WriteLine(line)
+					}
+					Else
+					{
+						Set stTranslate=characterStream.Write(line)
+					}
+					Quit:$System.Status.IsError(stTranslate)
+				}	
+				Quit:$System.Status.IsError(stTranslate)
+				
+				Do characterStream.Rewind()
+			}
+			Catch (oTranslateStreamException)
+			{
+				Set stTranslate=oTranslateStreamException.AsStatus()
+			}
+			
+			If $System.Status.IsError(stTranslate)
+			{
+				//Could not convert binary stream to character stream
+				//It is probably a binary file anyway
+				Set characterStream=""
+				Set st=$$$ADDSC(st, stTranslate)
+				Set ^gitfiles(i,"stTranslate")=stTranslate
+			}
+			Set ^gitfiles(i,"stream")="Done"
+			
+			Do binarystream.Rewind()
+			
+			Set stload = $$$OK
+			
+			set items = ""
+			If ('$IsObject(characterStream)) || (##class(CacheGitHubCI.UDL).IsUDLFile(characterStream))
+			{
+				Set ^gitfiles(i,"IsUDLFile")="1"
+				Set stload = ##class(CacheGitHubCI.UDL).LoadUDLFile(characterStream, binarystream, link, .items)
+			}
+			ElseIf bIsCacheFile
+			{
+				Set ^gitfiles(i,"IsUDLFile")="0"
+				Set stload = $system.OBJ.LoadStream(characterStream,"",.error,.items,,,,"UTF8")
+			}
+			Set ^gitfiles(i,"stload")=stload
+	 		If $$$ISERR(stload)
+	 		{
+		 		Set st=$$$ADDSC(st, stload)
+		 		Continue
+	 		}
+	 		Merge Items = items  // Does not overwrite existing array keys: Items(itemname)=""
 		}
-		Do stream.Rewind()
 		
-		Set stload = ""
-		
-		set items = ""
-		If ##class(CacheGitHubCI.UDL).IsUDLFile(stream) {
-			Set stload = ##class(CacheGitHubCI.UDL).LoadUDLFile(stream, link, .items)
-		}
-		Else {
-			Set stload = $system.OBJ.LoadStream(stream,"",.error,.items,,,,"UTF8")
-		}
-
- 		Set:$$$ISERR(stload) st=$$$ADDSC(st, stload)
- 		Merge Items = items  // Does not overwrite existing array keys: Items(itemname)=""
+		Set Request.Server="api.github.com"
+	}
+	Catch (oException)
+	{
+		Set st = oException.AsStatus()
+		If $D(i) Set ^gitfiles(i,"st final")=st
 	}
 	
-	Set Request.Server="api.github.com"
-	Return st
+	Quit st
 ]]></Implementation>
 </Method>
 </Class>
