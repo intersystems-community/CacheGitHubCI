@@ -9,12 +9,14 @@ Installation
 
         Set pVars("Namespace") = "CGCI" 
         Set pVars("IP") = {IP} 
+        Set pVars("Branch") = {Branch}
         Do ##class(CacheGitHubCI.Install).setup(.pVars)
 
   where: 
   
       {Namespace} is a namespace you want to install to. If it does not exist it would be created automatically. If it does exist only CacheGitHubCI package would be overwritten. 
 	  {IP} is an optional parameter of address of your server (with port, if required). For example "45.45.45.45:57776", "mycacheserver.com". Required if you wish to use webhook functionality.
+	  {Branch} is an optional parameter of branch from which you want to download CacheGitHubCI (only used while an online installation). If omitted master branch will be used.
 On this step installer would create (if needed) Namespace and corresponding database, download source code from GitHub and compile it, optionally create web application (named /cgci) if one does not exist (skipping web application creation process if one does exist or no IP is provided).
 
 3. Give the correct roles to `/cgci` webapplication for it to be able to compile desired classes.
