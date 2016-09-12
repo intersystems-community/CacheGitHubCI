@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="UTF8"?>
-<Export generator="Cache" version="25">
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 721U)" ts="2016-09-12 10:37:08">
 <Class name="CacheGitHubCI.UDL">
 <Super>%RegisteredObject</Super>
+<TimeChanged>64173,38010.41116</TimeChanged>
 <TimeCreated>64160,57921.275282</TimeCreated>
 
 <Method name="IsUDLFile">
@@ -39,23 +40,8 @@ Finds the first string in a line
 <FormalSpec>line:%String</FormalSpec>
 <ReturnType>%String</ReturnType>
 <Implementation><![CDATA[
-	set counter = 1
-	set letter = $extract(line, counter)
-	while letter '= "" {
-		if letter = " " {
-			set counter = counter + 1
-			set letter = $extract(line, counter)
-			continue
-		} else {
-			set ext = $extract(line, counter, *)
-			set index = $find(ext, " ")
-			if index = 0 {
-				set index = 9999999999
-			}
-			return $extract(ext, 0, index - 2)		
-		}
-	}
-	return ""
+	set trimmed = $zstrip(line, "<>W")
+	return $piece(trimmed, " ")
 ]]></Implementation>
 </Method>
 
