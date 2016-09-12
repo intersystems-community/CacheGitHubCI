@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 721U)" ts="2016-09-12 10:37:16">
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 721U)" ts="2016-09-12 18:04:29">
 <Class name="CacheGitHubCI.GitHub">
 <Super>%RegisteredObject,CacheGitHubCI.UDL</Super>
-<TimeChanged>64173,37813.88224</TimeChanged>
+<TimeChanged>64173,64816.292293</TimeChanged>
 <TimeCreated>63595,74968.945813</TimeCreated>
 
 <Method name="GetLocalIP">
@@ -309,10 +309,10 @@ Download list of files on https://raw.githubusercontent.com/ server.<br>
 			Set stload = $$$OK
 			
 			set items = ""
-			If ('$IsObject(characterStream)) || (##class(CacheGitHubCI.UDL).IsUDLFile(characterStream))
+			If ('$IsObject(characterStream)) || (..IsUDLFile(characterStream))
 			{
 				Set ^gitfiles(i,"IsUDLFile")="1"
-				Set stload = ##class(CacheGitHubCI.UDL).LoadUDLFile(characterStream, binarystream, link, .items)
+				Set stload = ..LoadUDLFile(characterStream, binarystream, link, .items)
 			}
 			ElseIf bIsCacheFile
 			{
